@@ -47,6 +47,20 @@ html, body {
     z-index: 1;
 }
 
+/* Building Logo - Top Left */
+.top-logo {
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    z-index: 10;
+}
+
+.top-logo img {
+    height: 80px;
+    width: auto;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
 /* Widget base - frosted glass effect */
 .widget {
     background: rgba(0, 0, 0, 0.45);
