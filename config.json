@@ -2,7 +2,7 @@
   "building": {
     "name": "Urban Tower",
     "logo": "assets/logo.svg",
-    "background": ""
+    "background": "https://urban-tower.co.il/assets/desktop/images/video.gif"
   },
   "location": {
     "city": "Kiryat Motzkin",

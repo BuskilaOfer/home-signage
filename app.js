@@ -45,12 +45,12 @@ async function loadConfig() {
 }
 
 // ============================================================
-// BACKGROUND
+// BACKGROUND (video/GIF style like urban-tower.co.il)
 // ============================================================
 function setupBackground() {
-    var bg = document.getElementById('background');
+    var bgVideo = document.getElementById('bg-video');
     if (config.building.background) {
-        bg.style.backgroundImage = 'url(' + config.building.background + ')';
+        bgVideo.src = config.building.background;
     }
     var logo = document.getElementById('building-logo');
     if (config.building.logo) {
@@ -356,7 +356,7 @@ function setupAutoRefresh() {
                 return;
             }
 
-            // Check if background changed
+            // Check if background (video/gif) changed
             if (newConfig.building.background !== config.building.background) {
                 config.building = newConfig.building;
                 setupBackground();
