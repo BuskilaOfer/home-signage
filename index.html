@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Signage</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Background Image -->
+    <div id="background" class="background"></div>
+
+    <!-- Clock Widget - Top Right -->
+    <div id="clock-widget" class="widget clock-widget">
+        <div class="clock-time" id="clock-time">00:00:00</div>
+        <div class="clock-date" id="clock-date">1 January 2025</div>
+    </div>
+
+    <!-- Weather Widget - Mid Right -->
+    <div id="weather-widget" class="widget weather-widget">
+        <div class="weather-header">
+            <div class="weather-location">
+                <span id="weather-city">Kiryat Motzkin</span><br>
+                <span id="weather-day">Sunday</span>
+            </div>
+            <div class="weather-current">
+                <span class="weather-temp" id="weather-temp">26°C</span>
+                <div class="weather-highlow">
+                    <span>☀ <span id="weather-high">27</span>°C</span>
+                    <span>🌙 <span id="weather-low">22</span>°C</span>
+                </div>
+            </div>
+        </div>
+        <div class="weather-icon-row">
+            <img id="weather-icon" class="weather-icon" src="" alt="weather">
+            <span id="weather-desc">Partly cloudy</span>
+        </div>
+        <div class="weather-forecast" id="weather-forecast">
+            <!-- Filled by JS -->
+        </div>
+    </div>
+
+    <!-- Message Ticker - Bottom -->
+    <div class="ticker-bar">
+        <div class="ticker-icon">
+            <svg viewBox="0 0 24 24" fill="white" width="48" height="48">
+                <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1Z"/>
+            </svg>
+        </div>
+        <div class="ticker-content">
+            <div class="ticker-text" id="ticker-text">Loading messages...</div>
+        </div>
+    </div>
+
+    <!-- Building Logo - Bottom Right -->
+    <div class="building-logo">
+        <img id="building-logo" src="assets/logo.svg" alt="Building Logo">
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

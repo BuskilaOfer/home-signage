@@ -1,0 +1,13 @@
+[Unit]
+Description=Signage YouTube Audio Player
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+User=pi
+ExecStart=/home/pi/signage/start-audio.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

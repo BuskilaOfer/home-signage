@@ -1,0 +1,15 @@
+[Unit]
+Description=Signage Kiosk Display
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+User=pi
+Environment=DISPLAY=:0
+ExecStartPre=/bin/sleep 5
+ExecStart=/home/pi/signage/start-kiosk.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=graphical.target
