@@ -1,17 +1,20 @@
 /**
  * RPi Home Signage - Display App
- * Loads config.json and renders clock, weather, messages
- *
- * Note: config.json is self-managed (not user-input from untrusted sources),
- * so DOM manipulation with known data is safe in this self-hosted context.
+ * - RSS feed from Ynet in ticker
+ * - Clock with pulse animation on each second
+ * - Weather with 4-day forecast
+ * - Auto-refresh config every 5 minutes
  */
 
 const CONFIG_URL = 'config.json';
 const WEATHER_API = 'https://api.openweathermap.org/data/2.5';
+// CORS proxy for RSS (GitHub Pages can't fetch RSS directly due to CORS)
+const RSS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 let config = null;
-let messages = [];
-let currentMessageIndex = 0;
+let rssItems = [];
+let currentRssIndex = 0;
+let rssInterval = null;
 
 // ============================================================
 // INIT
@@ -22,11 +25,11 @@ async function init() {
         setupBackground();
         setupClock();
         setupWeather();
-        setupMessages();
+        setupRSS();
         setupAutoRefresh();
     } catch (err) {
         console.error('Failed to initialize:', err);
-        document.getElementById('ticker-text').textContent = 'Error loading config. Check console.';
+        document.getElementById('ticker-text').textContent = 'Error loading. Check console.';
     }
 }
 
@@ -48,7 +51,6 @@ function setupBackground() {
     if (config.building.background) {
         bg.style.backgroundImage = `url(${config.building.background})`;
     }
-    // Set logo
     const logo = document.getElementById('building-logo');
     if (config.building.logo) {
         logo.src = config.building.logo;
@@ -57,7 +59,7 @@ function setupBackground() {
 }
 
 // ============================================================
-// CLOCK
+// CLOCK (with pulse/flash on every second tick)
 // ============================================================
 function setupClock() {
     updateClock();
@@ -76,17 +78,23 @@ function updateClock() {
     // Date
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
     document.getElementById('clock-date').textContent = now.toLocaleDateString('en-GB', options);
+
+    // Pulse animation on the clock widget background
+    const clockWidget = document.getElementById('clock-widget');
+    clockWidget.classList.remove('clock-pulse');
+    // Force reflow to restart animation
+    void clockWidget.offsetWidth;
+    clockWidget.classList.add('clock-pulse');
 }
 
 // ============================================================
-// WEATHER
+// WEATHER (4-day forecast)
 // ============================================================
 async function setupWeather() {
     document.getElementById('weather-city').textContent = config.location.city;
     updateWeatherDay();
 
     await fetchWeather();
-    // Refresh weather periodically
     setInterval(fetchWeather, (config.weather.refreshMinutes || 30) * 60 * 1000);
 }
 
@@ -97,11 +105,9 @@ function updateWeatherDay() {
 
 async function fetchWeather() {
     try {
-        // Try OpenWeatherMap if API key provided
         if (config.weather.apiKey) {
             await fetchOpenWeatherMap();
         } else {
-            // Fallback: use wttr.in (no API key needed)
             await fetchWttr();
         }
     } catch (err) {
@@ -114,7 +120,6 @@ async function fetchOpenWeatherMap() {
     const key = config.weather.apiKey;
     const units = config.weather.units || 'metric';
 
-    // Current weather
     const currentRes = await fetch(
         `${WEATHER_API}/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${key}`
     );
@@ -127,7 +132,6 @@ async function fetchOpenWeatherMap() {
     document.getElementById('weather-icon').src =
         `https://openweathermap.org/img/wn/${current.weather[0].icon}@2x.png`;
 
-    // Forecast
     const forecastRes = await fetch(
         `${WEATHER_API}/forecast?lat=${lat}&lon=${lon}&units=${units}&appid=${key}`
     );
@@ -144,45 +148,46 @@ async function fetchWttr() {
     document.getElementById('weather-temp').textContent = `${current.temp_C}°C`;
     document.getElementById('weather-desc').textContent = current.weatherDesc[0].value;
 
-    // Today's high/low
     const today = data.weather[0];
     document.getElementById('weather-high').textContent = today.maxtempC;
     document.getElementById('weather-low').textContent = today.mintempC;
 
-    // Weather icon - hide img element for wttr fallback
+    // Hide the img icon for wttr
     const iconEl = document.getElementById('weather-icon');
     iconEl.style.display = 'none';
 
-    // Render forecast
+    // Render 4-day forecast
     renderWttrForecast(data.weather);
 }
 
 function renderWttrForecast(weatherDays) {
     const container = document.getElementById('weather-forecast');
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const numDays = (config.weather.forecastDays || 4);
 
     // Clear existing forecast
     container.textContent = '';
 
-    weatherDays.slice(1, 5).forEach(day => {
-        const date = new Date(day.date);
-        const dayName = days[date.getDay()];
-        const icon = getWeatherEmoji(day.hourly[4].weatherCode);
+    // Skip today (index 0), show next N days
+    weatherDays.slice(1, numDays + 1).forEach(function(day) {
+        var date = new Date(day.date);
+        var dayName = days[date.getDay()];
+        var icon = getWeatherEmoji(day.hourly[4].weatherCode);
 
-        const dayEl = document.createElement('div');
+        var dayEl = document.createElement('div');
         dayEl.className = 'forecast-day';
 
-        const nameEl = document.createElement('div');
+        var nameEl = document.createElement('div');
         nameEl.className = 'day-name';
         nameEl.textContent = dayName;
 
-        const iconDivEl = document.createElement('div');
+        var iconDivEl = document.createElement('div');
         iconDivEl.className = 'day-icon';
         iconDivEl.textContent = icon;
 
-        const tempsEl = document.createElement('div');
+        var tempsEl = document.createElement('div');
         tempsEl.className = 'day-temps';
-        tempsEl.textContent = `${day.maxtempC}° ${day.mintempC}°`;
+        tempsEl.textContent = day.maxtempC + '° ' + day.mintempC + '°';
 
         dayEl.appendChild(nameEl);
         dayEl.appendChild(iconDivEl);
@@ -192,48 +197,47 @@ function renderWttrForecast(weatherDays) {
 }
 
 function renderForecast(forecastData) {
-    const container = document.getElementById('weather-forecast');
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var container = document.getElementById('weather-forecast');
+    var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var numDays = (config.weather.forecastDays || 4);
 
-    // Group by day, take noon reading
-    const dailyMap = {};
-    forecastData.list.forEach(item => {
-        const date = item.dt_txt.split(' ')[0];
-        const hour = parseInt(item.dt_txt.split(' ')[1]);
+    var dailyMap = {};
+    forecastData.list.forEach(function(item) {
+        var date = item.dt_txt.split(' ')[0];
+        var hour = parseInt(item.dt_txt.split(' ')[1]);
         if (hour === 12 || !dailyMap[date]) {
             dailyMap[date] = item;
         }
     });
 
-    const dailyArr = Object.values(dailyMap).slice(1, 5);
+    var dailyArr = Object.values(dailyMap).slice(1, numDays + 1);
 
-    // Clear existing forecast
     container.textContent = '';
 
-    dailyArr.forEach(item => {
-        const date = new Date(item.dt * 1000);
-        const dayName = days[date.getDay()];
+    dailyArr.forEach(function(item) {
+        var date = new Date(item.dt * 1000);
+        var dayName = days[date.getDay()];
 
-        const dayEl = document.createElement('div');
+        var dayEl = document.createElement('div');
         dayEl.className = 'forecast-day';
 
-        const nameEl = document.createElement('div');
+        var nameEl = document.createElement('div');
         nameEl.className = 'day-name';
         nameEl.textContent = dayName;
 
-        const iconDivEl = document.createElement('div');
+        var iconDivEl = document.createElement('div');
         iconDivEl.className = 'day-icon';
-        const iconImg = document.createElement('img');
-        iconImg.src = `https://openweathermap.org/img/wn/${item.weather[0].icon}.png`;
+        var iconImg = document.createElement('img');
+        iconImg.src = 'https://openweathermap.org/img/wn/' + item.weather[0].icon + '.png';
         iconImg.style.width = '32px';
         iconImg.style.height = '32px';
         iconImg.style.filter = 'invert(1)';
         iconImg.alt = item.weather[0].description;
         iconDivEl.appendChild(iconImg);
 
-        const tempsEl = document.createElement('div');
+        var tempsEl = document.createElement('div');
         tempsEl.className = 'day-temps';
-        tempsEl.textContent = `${Math.round(item.main.temp_max)}° ${Math.round(item.main.temp_min)}°`;
+        tempsEl.textContent = Math.round(item.main.temp_max) + '° ' + Math.round(item.main.temp_min) + '°';
 
         dayEl.appendChild(nameEl);
         dayEl.appendChild(iconDivEl);
@@ -256,50 +260,114 @@ function getWeatherEmoji(code) {
 }
 
 // ============================================================
-// MESSAGES (TICKER)
+// RSS FEED (Ynet news ticker)
 // ============================================================
-function setupMessages() {
-    messages = (config.messages || []).filter(m => m.active);
+async function setupRSS() {
+    await fetchRSS();
+    // Refresh RSS every 10 minutes
+    setInterval(fetchRSS, 10 * 60 * 1000);
+}
+
+async function fetchRSS() {
+    try {
+        var rssUrl = config.rss && config.rss.url;
+        if (!rssUrl) {
+            // Fallback to static messages if no RSS configured
+            setupStaticMessages();
+            return;
+        }
+
+        var proxyUrl = RSS_PROXY + encodeURIComponent(rssUrl);
+        var response = await fetch(proxyUrl);
+        var text = await response.text();
+
+        var parser = new DOMParser();
+        var xml = parser.parseFromString(text, 'text/xml');
+        var items = xml.querySelectorAll('item');
+
+        var maxItems = (config.rss && config.rss.maxItems) || 15;
+        rssItems = [];
+
+        for (var i = 0; i < Math.min(items.length, maxItems); i++) {
+            var titleEl = items[i].querySelector('title');
+            if (titleEl && titleEl.textContent) {
+                rssItems.push(titleEl.textContent.trim());
+            }
+        }
+
+        if (rssItems.length === 0) {
+            document.getElementById('ticker-text').textContent = 'No news available';
+            return;
+        }
+
+        // Start rotating RSS items
+        currentRssIndex = 0;
+        showCurrentRssItem();
+
+        // Clear previous interval if exists
+        if (rssInterval) clearInterval(rssInterval);
+        var rotationSec = (config.rss && config.rss.rotationSeconds) || 10;
+        rssInterval = setInterval(rotateRssItem, rotationSec * 1000);
+
+    } catch (err) {
+        console.error('RSS fetch failed:', err);
+        // Fallback to static messages
+        setupStaticMessages();
+    }
+}
+
+function showCurrentRssItem() {
+    if (rssItems.length === 0) return;
+
+    var ticker = document.getElementById('ticker-text');
+    ticker.style.animation = 'none';
+    void ticker.offsetWidth;
+    ticker.style.animation = 'ticker-fade 0.5s ease-in-out';
+    ticker.textContent = rssItems[currentRssIndex];
+}
+
+function rotateRssItem() {
+    currentRssIndex = (currentRssIndex + 1) % rssItems.length;
+    showCurrentRssItem();
+}
+
+// Fallback: static messages from config
+function setupStaticMessages() {
+    var messages = (config.messages || []).filter(function(m) { return m.active; });
 
     if (messages.length === 0) {
-        document.getElementById('ticker-text').textContent = 'No messages';
+        document.getElementById('ticker-text').textContent = 'Urban Tower';
         return;
     }
 
-    showCurrentMessage();
-    setInterval(rotateMessage, (config.messageRotationSeconds || 8) * 1000);
-}
+    var idx = 0;
+    document.getElementById('ticker-text').textContent = messages[0].text;
 
-function showCurrentMessage() {
-    if (messages.length === 0) return;
-
-    const ticker = document.getElementById('ticker-text');
-    ticker.style.animation = 'none';
-    ticker.offsetHeight; // trigger reflow
-    ticker.style.animation = 'ticker-fade 0.5s ease-in-out';
-    ticker.textContent = messages[currentMessageIndex].text;
-}
-
-function rotateMessage() {
-    currentMessageIndex = (currentMessageIndex + 1) % messages.length;
-    showCurrentMessage();
+    setInterval(function() {
+        idx = (idx + 1) % messages.length;
+        var ticker = document.getElementById('ticker-text');
+        ticker.style.animation = 'none';
+        void ticker.offsetWidth;
+        ticker.style.animation = 'ticker-fade 0.5s ease-in-out';
+        ticker.textContent = messages[idx].text;
+    }, (config.messageRotationSeconds || 8) * 1000);
 }
 
 // ============================================================
 // AUTO-REFRESH (reload config every 5 min to pick up changes)
 // ============================================================
 function setupAutoRefresh() {
-    setInterval(async () => {
+    setInterval(async function() {
         try {
-            const newConfig = await loadConfig();
+            var newConfig = await loadConfig();
 
-            // Check if messages changed
-            if (JSON.stringify(newConfig.messages) !== JSON.stringify(config.messages)) {
-                config.messages = newConfig.messages;
-                messages = config.messages.filter(m => m.active);
-                currentMessageIndex = 0;
-                showCurrentMessage();
-                console.log('Messages updated from config');
+            // Check if RSS URL changed
+            var oldRss = config.rss && config.rss.url;
+            var newRss = newConfig.rss && newConfig.rss.url;
+            if (oldRss !== newRss) {
+                config = newConfig;
+                fetchRSS();
+                console.log('RSS source updated');
             }
 
             // Check if background changed
@@ -308,10 +376,11 @@ function setupAutoRefresh() {
                 setupBackground();
             }
 
+            config = newConfig;
         } catch (err) {
             console.error('Auto-refresh failed:', err);
         }
-    }, 5 * 60 * 1000); // every 5 minutes
+    }, 5 * 60 * 1000);
 }
 
 // ============================================================

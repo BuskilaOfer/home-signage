@@ -9,27 +9,20 @@
     "lat": 32.84,
     "lon": 35.07
   },
+  "rss": {
+    "url": "http://www.ynet.co.il/Integration/StoryRss2.xml",
+    "rotationSeconds": 10,
+    "maxItems": 15
+  },
   "messages": [
     {
       "id": 1,
-      "text": "Water shutdown tomorrow 06:00-10:00. Please prepare.",
-      "type": "alert",
-      "active": true
-    },
-    {
-      "id": 2,
-      "text": "Building meeting this Thursday at 20:00 in the lobby.",
+      "text": "Welcome to Urban Tower",
       "type": "info",
-      "active": true
-    },
-    {
-      "id": 3,
-      "text": "Please keep the hallways clean. Thank you!",
-      "type": "info",
-      "active": true
+      "active": false
     }
   ],
-  "messageRotationSeconds": 8,
+  "messageRotationSeconds": 10,
   "youtube": {
     "playlist": "https://www.youtube.com/playlist?list=PLjp0AEEJ0-fHgANMYEKhB_LhEbOFrXQC",
     "description": "Lofi beats for background"
@@ -38,6 +31,7 @@
     "provider": "wttr",
     "apiKey": "",
     "units": "metric",
+    "forecastDays": 4,
     "refreshMinutes": 30
   }
 }

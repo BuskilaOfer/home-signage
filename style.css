@@ -43,6 +43,18 @@ html, body {
     top: 40px;
     right: 40px;
     text-align: center;
+    transition: background-color 0.15s ease-out;
+}
+
+/* Clock pulse: background flashes brighter every second */
+.clock-pulse {
+    animation: clock-bg-pulse 1s ease-out;
+}
+
+@keyframes clock-bg-pulse {
+    0% { background: rgba(255, 255, 255, 0.12); }
+    15% { background: rgba(255, 255, 255, 0.06); }
+    100% { background: rgba(0, 0, 0, 0.45); }
 }
 
 .clock-time {
