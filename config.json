@@ -24,8 +24,8 @@
   ],
   "messageRotationSeconds": 10,
   "youtube": {
-    "playlist": "https://www.youtube.com/playlist?list=PLjp0AEEJ0-fHgANMYEKhB_LhEbOFrXQC",
-    "description": "Lofi beats for background"
+    "playlist": "https://www.youtube.com/watch?v=nK5Jwi3Mpc0&list=RDnK5Jwi3Mpc0&start_radio=1",
+    "description": "nK5Jwi3Mpc0 radio mix"
   },
   "weather": {
     "provider": "wttr",
