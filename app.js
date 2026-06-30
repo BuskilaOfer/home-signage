@@ -204,9 +204,15 @@ async function fetchRSS() {
         if (data.status !== 'ok' || !data.items || !data.items.length) throw new Error('empty');
         var max = (config.rss && config.rss.maxItems) || 15;
         rssItems = data.items.slice(0, max).map(function(item) {
-            var img = item.thumbnail ||
-                (item.enclosure && item.enclosure.link && item.enclosure.type &&
-                 /image/.test(item.enclosure.type) ? item.enclosure.link : '');
+            // Try thumbnail, then enclosure, then parse img from description HTML
+            var img = item.thumbnail || '';
+            if (!img && item.enclosure && item.enclosure.link &&
+                item.enclosure.type && /image/.test(item.enclosure.type)) {
+                img = item.enclosure.link;
+            }
+            if (!img && item.description) {
+                img = extractImgFromHtml(item.description);
+            }
             return {
                 title:       (item.title       || '').trim(),
                 description: stripHtml(item.description || '').substring(0, 280).trim(),
@@ -234,6 +240,10 @@ async function fetchRSSFallback(rssUrl) {
             if (!img) {
                 var mc = item.getElementsByTagNameNS('http://search.yahoo.com/mrss/', 'content')[0];
                 if (mc) img = mc.getAttribute('url') || '';
+            }
+            if (!img) {
+                var descEl = item.querySelector('description');
+                if (descEl) img = extractImgFromHtml(descEl.textContent || '');
             }
             return { title: title, description: desc, image: img,
                      pubDate: ((item.querySelector('pubDate') || {}).textContent || '') };
@@ -302,6 +312,13 @@ function stripHtml(html) {
     var d = document.createElement('div');
     d.innerHTML = html;
     return d.textContent || d.innerText || '';
+}
+
+function extractImgFromHtml(html) {
+    var d = document.createElement('div');
+    d.innerHTML = html;
+    var img = d.querySelector('img');
+    return img ? (img.getAttribute('src') || '') : '';
 }
 
 function useStaticMessages() {
