@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ~/.config/labwc/rc.xml -->
+<!-- Pins the mpv YouTube overlay at exact .youtube-card position -->
+<!-- Layout: screen 1920x1080, .main-area bottom=300px, youtube panel pad 28/14/22/28 -->
+<!-- Card position: x=28, y=28, w=1298, h=730 -->
+<labwc_config>
+  <windowRules>
+    <windowRule identifier="kiosk-youtube" matchOnce="yes" fixedPosition="yes"
+                skipTaskbar="yes" skipWindowSwitcher="yes">
+      <action name="MoveTo"><x>28</x><y>28</y></action>
+      <action name="ResizeTo"><width>1298</width><height>730</height></action>
+    </windowRule>
+  </windowRules>
+</labwc_config>

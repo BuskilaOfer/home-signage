@@ -1,0 +1,23 @@
+#!/bin/sh
+# ~/.config/labwc/autostart
+# Runs when the labwc Wayland session starts (via LightDM autologin)
+
+# Kill any leftover desktop processes from RPi OS default session
+pkill -f wf-panel-pi  2>/dev/null
+pkill -f pcmanfm-pi   2>/dev/null
+pkill -f kanshi       2>/dev/null
+
+# Ensure display is on
+wlopm --on '*' 2>/dev/null &
+
+# Chromium kiosk — restart loop (handles crashes)
+while true; do
+  /home/ofer/kiosk/start.sh
+  sleep 2
+done &
+
+# Auto-deploy watcher
+/home/ofer/kiosk/watch-deploy.sh >> /tmp/watch-deploy.log 2>&1 &
+
+# YouTube video overlay — delay 8s to let Chromium start first
+sleep 8 && /home/ofer/kiosk/youtube-player.sh >> /tmp/yt-player.log 2>&1 &

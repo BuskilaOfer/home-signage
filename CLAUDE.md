@@ -1,8 +1,24 @@
 # CLAUDE.md — Home Signage Kiosk
 
-> Context file for AI assistants (Claude, Copilot, etc.) continuing work on this project.
+> Claude Code project instructions for local development.
 > Keep this file up to date when architecture changes.
-> **No credentials here** — all secrets are stored outside the repo.
+> Credentials are in `.env` (gitignored — never commit it).
+
+## Quick Start
+
+```sh
+source .env   # loads RPI_HOST, RPI_USER, RPI_PASS, GITHUB_TOKEN
+
+# SSH to Pi
+sshpass -p "$RPI_PASS" ssh -o StrictHostKeyChecking=no $RPI_USER@$RPI_HOST
+
+# Deploy web changes
+git add -p && git commit -m "..." && git push
+# Pages deploys in ~60s, Pi auto-reloads via watch-deploy.sh
+
+# Push a Pi script update
+sshpass -p "$RPI_PASS" scp rpi-setup/youtube-player.sh $RPI_USER@$RPI_HOST:/home/ofer/kiosk/youtube-player.sh
+```
 
 ---
 
@@ -202,7 +218,7 @@ To change: edit the `PLAYLIST_IDS` variable in `/home/ofer/kiosk/youtube-player.
 | SIGUSR1 to labwc | Sends reconfigure signal but **kills the kiosk session** on this build — don't use it |
 | GitHub Pages cache | CDN can take 2–5 min to serve new content after commit |
 | yt-dlp mix playlist | `get_playlist()` on YouTube mix URLs hangs (unlimited entries); use hardcoded IDs |
-| CDP WebSocket | Requires `--remote-allow-origins=http://localhost:9222` flag to connect; current start.sh lacks it |
+| CDP WebSocket | Requires `--remote-allow-origins=http://localhost:9222` — added to `rpi-setup/start.sh` (push to Pi to enable) |
 | Chromium singleton lock | After crash, delete `/home/ofer/kiosk/profile/Default/SingletonLock` before restart |
 
 ---
