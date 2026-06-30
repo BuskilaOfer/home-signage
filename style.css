@@ -20,7 +20,7 @@ html, body {
 /* Dark overlay so panels stay readable */
 .bg-overlay {
     position: absolute; inset: 0;
-    background: rgba(0, 8, 28, 0.25);
+    background: rgba(0, 0, 0, 0);
 }
 
 /* Main area */
