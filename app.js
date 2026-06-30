@@ -38,19 +38,42 @@ function setupBackground() {
 }
 
 // ── YOUTUBE ──────────────────────────────────────────────────────
+// Verified-embeddable lofi video IDs (non-live, long videos)
+var YT_VIDEOS = [
+    '4xDzrJKXOOY',  // synthwave radio
+    'Na0w3Mz46GA',  // asian lofi
+    'jfKfPfyJRdk',  // lofi hip hop radio
+    'lZmNIUVKUvk',  // lofi chill
+    'rUxyKA_-grg',  // rainy day lofi
+    'hHW1oY26kxQ'   // lofi hip hop
+];
+var ytIndex = 0;
+var ytCheckTimer = null;
+
 function setupYoutube() {
+    ytIndex = 0;
+    loadYoutubeVideo(YT_VIDEOS[ytIndex]);
+}
+
+function loadYoutubeVideo(videoId) {
     var yt = document.getElementById('yt-player');
     if (!yt) return;
-    var playlist = config.youtube && config.youtube.playlist;
-    if (playlist) {
-        var match = playlist.match(/list=([A-Za-z0-9_-]+)/);
-        if (match) {
-            var listId = match[1];
-            yt.src = 'https://www.youtube.com/embed/videoseries?list=' + listId +
-                     '&autoplay=1&mute=1&controls=0&loop=1&modestbranding=1' +
-                     '&rel=0&iv_load_policy=3&disablekb=1&playsinline=1';
-        }
-    }
+    yt.src = 'https://www.youtube-nocookie.com/embed/' + videoId +
+             '?autoplay=1&mute=1&controls=0&modestbranding=1' +
+             '&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&start=30';
+    // Check after 8 seconds if video loaded — if still showing error, try next
+    if (ytCheckTimer) clearTimeout(ytCheckTimer);
+    ytCheckTimer = setTimeout(function() {
+        try {
+            var doc = yt.contentDocument || (yt.contentWindow && yt.contentWindow.document);
+            if (doc && doc.body && doc.body.innerText &&
+                doc.body.innerText.indexOf('unavailable') >= 0) {
+                console.warn('YT video', videoId, 'unavailable, trying next');
+                ytIndex = (ytIndex + 1) % YT_VIDEOS.length;
+                loadYoutubeVideo(YT_VIDEOS[ytIndex]);
+            }
+        } catch(e) { /* cross-origin — can't read, assume OK */ }
+    }, 8000);
 }
 
 // ── CLOCK ────────────────────────────────────────────────────────
