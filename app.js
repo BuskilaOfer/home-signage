@@ -1,25 +1,15 @@
-/**
- * RPi Home Signage - Display App
- * - RSS feed from Ynet in ticker
- * - Clock with pulse animation on each second
- * - Weather with 4-day forecast (Open-Meteo, free, no key)
- * - Auto-refresh config every 5 minutes
- */
+'use strict';
 
-var CONFIG_URL = 'config.json';
-// rss2json is a reliable free RSS-to-JSON converter
-var RSS2JSON_API = 'https://api.rss2json.com/v1/api.json?rss_url=';
-// Open-Meteo: free weather API, no key needed, 7-day forecast
+var CONFIG_URL    = 'config.json';
+var RSS2JSON_API  = 'https://api.rss2json.com/v1/api.json?rss_url=';
 var OPENMETEO_API = 'https://api.open-meteo.com/v1/forecast';
 
-var config = null;
-var rssItems = [];
-var currentRssIndex = 0;
-var rssInterval = null;
+var config           = null;
+var rssItems         = [];   // [{title, description, image, pubDate}]
+var currentRssIndex  = 0;
+var rssInterval      = null;
 
-// ============================================================
-// INIT
-// ============================================================
+// ── INIT ─────────────────────────────────────────────────────────
 async function init() {
     try {
         config = await loadConfig();
@@ -29,347 +19,313 @@ async function init() {
         setupRSS();
         setupAutoRefresh();
     } catch (err) {
-        console.error('Failed to initialize:', err);
-        document.getElementById('ticker-text').textContent = 'Error loading. Check console.';
+        console.error('Init failed:', err);
     }
 }
 
-// ============================================================
-// CONFIG
-// ============================================================
+// ── CONFIG ───────────────────────────────────────────────────────
 async function loadConfig() {
-    var cacheBust = '?t=' + Date.now();
-    var response = await fetch(CONFIG_URL + cacheBust);
-    if (!response.ok) throw new Error('Failed to load config.json');
-    return response.json();
+    var r = await fetch(CONFIG_URL + '?t=' + Date.now());
+    if (!r.ok) throw new Error('Failed to load config.json');
+    return r.json();
 }
 
-// ============================================================
-// BACKGROUND (video/GIF style like urban-tower.co.il)
-// ============================================================
+// ── BACKGROUND ───────────────────────────────────────────────────
 function setupBackground() {
-    var bgVideo = document.getElementById('bg-video');
-    if (config.building.background) {
-        bgVideo.src = config.building.background;
-    }
-    var logo = document.getElementById('building-logo');
-    if (config.building.logo) {
-        logo.src = config.building.logo;
-        logo.alt = config.building.name;
-    }
+    document.getElementById('bg-img').src       = config.building.background || 'assets/video.gif';
+    document.getElementById('building-logo').src = config.building.logo       || 'assets/logo.svg';
 }
 
-// ============================================================
-// CLOCK (with pulse/flash on every second tick)
-// ============================================================
-function setupClock() {
-    updateClock();
-    setInterval(updateClock, 1000);
-}
+// ── CLOCK ────────────────────────────────────────────────────────
+function setupClock() { updateClock(); setInterval(updateClock, 1000); }
 
 function updateClock() {
     var now = new Date();
-
-    // Time
-    var hours = String(now.getHours()).padStart(2, '0');
-    var minutes = String(now.getMinutes()).padStart(2, '0');
-    var seconds = String(now.getSeconds()).padStart(2, '0');
-    document.getElementById('clock-time').textContent = hours + ':' + minutes + ':' + seconds;
-
-    // Date
-    var options = { day: 'numeric', month: 'long', year: 'numeric' };
-    document.getElementById('clock-date').textContent = now.toLocaleDateString('en-GB', options);
-
-    // Pulse animation on the clock widget background
-    var clockWidget = document.getElementById('clock-widget');
-    clockWidget.classList.remove('clock-pulse');
-    void clockWidget.offsetWidth; // force reflow
-    clockWidget.classList.add('clock-pulse');
+    var h   = String(now.getHours()).padStart(2,'0');
+    var m   = String(now.getMinutes()).padStart(2,'0');
+    var s   = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock-time').textContent = h+':'+m+':'+s;
+    document.getElementById('clock-date').textContent =
+        now.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+    var w = document.getElementById('clock-widget');
+    w.classList.remove('clock-pulse');
+    void w.offsetWidth;
+    w.classList.add('clock-pulse');
 }
 
-// ============================================================
-// WEATHER - Open-Meteo (free, no API key, 7-day forecast)
-// ============================================================
+// ── WEATHER ──────────────────────────────────────────────────────
 async function setupWeather() {
     document.getElementById('weather-city').textContent = config.location.city;
-    updateWeatherDay();
-
-    await fetchWeather();
-    setInterval(fetchWeather, (config.weather.refreshMinutes || 30) * 60 * 1000);
-}
-
-function updateWeatherDay() {
-    var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     document.getElementById('weather-day').textContent = days[new Date().getDay()];
+    await fetchWeather();
+    setInterval(fetchWeather, (config.weather.refreshMinutes || 30) * 60000);
 }
 
 async function fetchWeather() {
     try {
-        var lat = config.location.lat;
-        var lon = config.location.lon;
-        var url = OPENMETEO_API +
-            '?latitude=' + lat +
-            '&longitude=' + lon +
-            '&current=temperature_2m,weather_code' +
-            '&daily=weather_code,temperature_2m_max,temperature_2m_min' +
-            '&timezone=auto' +
-            '&forecast_days=5';
+        var url = OPENMETEO_API
+            + '?latitude='  + config.location.lat
+            + '&longitude=' + config.location.lon
+            + '&current=temperature_2m,weather_code'
+            + '&daily=weather_code,temperature_2m_max,temperature_2m_min'
+            + '&timezone=auto&forecast_days=5';
+        var data = await (await fetch(url)).json();
 
-        var response = await fetch(url);
-        var data = await response.json();
-
-        // Current weather
-        var currentTemp = Math.round(data.current.temperature_2m);
-        document.getElementById('weather-temp').textContent = currentTemp + '°C';
-
-        var currentCode = data.current.weather_code;
-        document.getElementById('weather-desc').textContent = getWeatherDescription(currentCode);
-
-        // Today's high/low
+        var temp = Math.round(data.current.temperature_2m);
+        var code = data.current.weather_code;
+        document.getElementById('weather-temp').textContent = temp + '°C';
+        document.getElementById('weather-desc').textContent = getWeatherDesc(code);
         document.getElementById('weather-high').textContent = Math.round(data.daily.temperature_2m_max[0]);
-        document.getElementById('weather-low').textContent = Math.round(data.daily.temperature_2m_min[0]);
-
-        // Hide the img icon (we use text descriptions)
-        var iconEl = document.getElementById('weather-icon');
-        iconEl.style.display = 'none';
-
-        // Render 4-day forecast (skip today, show next 4 days)
+        document.getElementById('weather-low').textContent  = Math.round(data.daily.temperature_2m_min[0]);
+        document.getElementById('weather-main-icon').innerHTML = weatherSVG(code, 88);
         renderForecast(data.daily);
-
-    } catch (err) {
-        console.error('Weather fetch failed:', err);
-    }
+    } catch(e) { console.error('Weather error:', e); }
 }
 
 function renderForecast(daily) {
-    var container = document.getElementById('weather-forecast');
-    var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    var numDays = (config.weather.forecastDays || 4);
-
-    container.textContent = '';
-
-    // Start from index 1 (tomorrow) and show numDays
-    for (var i = 1; i <= numDays && i < daily.time.length; i++) {
-        var date = new Date(daily.time[i]);
-        var dayName = dayNames[date.getDay()];
-        var icon = getWeatherEmoji(daily.weather_code[i]);
+    var c    = document.getElementById('weather-forecast');
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    c.innerHTML = '';
+    var n = config.weather.forecastDays || 4;
+    for (var i = 1; i <= n && i < daily.time.length; i++) {
+        var d    = new Date(daily.time[i]);
         var high = Math.round(daily.temperature_2m_max[i]);
-        var low = Math.round(daily.temperature_2m_min[i]);
-
-        var dayEl = document.createElement('div');
-        dayEl.className = 'forecast-day';
-
-        var nameEl = document.createElement('div');
-        nameEl.className = 'day-name';
-        nameEl.textContent = dayName;
-
-        var iconDivEl = document.createElement('div');
-        iconDivEl.className = 'day-icon';
-        iconDivEl.textContent = icon;
-
-        var tempsEl = document.createElement('div');
-        tempsEl.className = 'day-temps';
-        tempsEl.textContent = high + '° ' + low + '°';
-
-        dayEl.appendChild(nameEl);
-        dayEl.appendChild(iconDivEl);
-        dayEl.appendChild(tempsEl);
-        container.appendChild(dayEl);
+        var low  = Math.round(daily.temperature_2m_min[i]);
+        var el   = document.createElement('div');
+        el.className = 'forecast-day';
+        el.innerHTML =
+            '<div class="fc-name">' + days[d.getDay()] + '</div>' +
+            '<div class="fc-icon">' + weatherSVG(daily.weather_code[i], 30) + '</div>' +
+            '<div class="fc-temps">' + high + '° ' + low + '°</div>';
+        c.appendChild(el);
     }
 }
 
-function getWeatherEmoji(code) {
-    // WMO Weather interpretation codes
-    if (code === 0) return '☀️';
-    if (code === 1) return '🌤️';
-    if (code === 2) return '⛅';
-    if (code === 3) return '☁️';
-    if (code >= 45 && code <= 48) return '🌫️';
-    if (code >= 51 && code <= 55) return '🌦️';
-    if (code >= 56 && code <= 57) return '🌧️';
-    if (code >= 61 && code <= 65) return '🌧️';
-    if (code >= 66 && code <= 67) return '🌨️';
-    if (code >= 71 && code <= 77) return '🌨️';
-    if (code >= 80 && code <= 82) return '🌧️';
-    if (code >= 85 && code <= 86) return '🌨️';
-    if (code >= 95 && code <= 99) return '⛈️';
-    return '☀️';
+function weatherSVG(code, size) {
+    var s = size || 40;
+    var w = 'stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+    var tag = '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" '+w+'>';
+    if (code <= 1) {
+        // Sun
+        return tag +
+            '<circle cx="12" cy="12" r="4.5"/>' +
+            '<line x1="12" y1="2"    x2="12" y2="4.5"/>' +
+            '<line x1="12" y1="19.5" x2="12" y2="22"/>' +
+            '<line x1="2"  y1="12"   x2="4.5" y2="12"/>' +
+            '<line x1="19.5" y1="12" x2="22" y2="12"/>' +
+            '<line x1="4.93" y1="4.93"   x2="6.7"  y2="6.7"/>' +
+            '<line x1="17.3" y1="17.3"   x2="19.07" y2="19.07"/>' +
+            '<line x1="19.07" y1="4.93"  x2="17.3"  y2="6.7"/>' +
+            '<line x1="6.7"  y1="17.3"   x2="4.93"  y2="19.07"/>' +
+            '</svg>';
+    }
+    if (code === 2) {
+        // Partly cloudy
+        return tag +
+            '<circle cx="9.5" cy="9" r="3"/>' +
+            '<line x1="9.5" y1="3"   x2="9.5" y2="4.5"/>' +
+            '<line x1="9.5" y1="13.5" x2="9.5" y2="15"/>' +
+            '<line x1="3.5" y1="9"   x2="5"   y2="9"/>' +
+            '<line x1="14"  y1="9"   x2="15.5" y2="9"/>' +
+            '<line x1="4.9" y1="4.9" x2="6"   y2="6"/>' +
+            '<line x1="13"  y1="13"  x2="14.1" y2="14.1"/>' +
+            '<line x1="14.1" y1="4.9" x2="13" y2="6"/>' +
+            '<path d="M7 18h8a3.5 3.5 0 0 0 0-7h-1.5a4.5 4.5 0 0 0-8.5 1.5"/>' +
+            '</svg>';
+    }
+    if (code === 3) {
+        // Overcast / cloud
+        return tag +
+            '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>' +
+            '</svg>';
+    }
+    if (code >= 61 && code <= 82) {
+        // Rain
+        return tag +
+            '<path d="M17.5 15H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>' +
+            '<line x1="8"  y1="19" x2="8"  y2="21"/>' +
+            '<line x1="12" y1="19" x2="12" y2="21"/>' +
+            '<line x1="16" y1="19" x2="16" y2="21"/>' +
+            '</svg>';
+    }
+    if (code >= 71 && code <= 77) {
+        // Snow
+        return tag +
+            '<path d="M17.5 15H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>' +
+            '<circle cx="8"  cy="20" r="1"/>' +
+            '<circle cx="12" cy="20" r="1"/>' +
+            '<circle cx="16" cy="20" r="1"/>' +
+            '</svg>';
+    }
+    // Default: sun
+    return tag +
+        '<circle cx="12" cy="12" r="4.5"/>' +
+        '<line x1="12" y1="2"    x2="12" y2="4.5"/>' +
+        '<line x1="12" y1="19.5" x2="12" y2="22"/>' +
+        '<line x1="2"  y1="12"   x2="4.5" y2="12"/>' +
+        '<line x1="19.5" y1="12" x2="22" y2="12"/>' +
+        '</svg>';
 }
 
-function getWeatherDescription(code) {
+function getWeatherDesc(code) {
     if (code === 0) return 'Clear sky';
     if (code === 1) return 'Mainly clear';
     if (code === 2) return 'Partly cloudy';
     if (code === 3) return 'Overcast';
     if (code >= 45 && code <= 48) return 'Foggy';
     if (code >= 51 && code <= 55) return 'Drizzle';
-    if (code >= 56 && code <= 57) return 'Freezing drizzle';
     if (code >= 61 && code <= 65) return 'Rain';
-    if (code >= 66 && code <= 67) return 'Freezing rain';
     if (code >= 71 && code <= 77) return 'Snow';
-    if (code >= 80 && code <= 82) return 'Rain showers';
-    if (code >= 85 && code <= 86) return 'Snow showers';
-    if (code >= 95 && code <= 99) return 'Thunderstorm';
+    if (code >= 80 && code <= 82) return 'Showers';
+    if (code >= 95) return 'Thunderstorm';
     return 'Clear';
 }
 
-// ============================================================
-// RSS FEED (Ynet news ticker)
-// ============================================================
+// ── RSS ──────────────────────────────────────────────────────────
 async function setupRSS() {
     await fetchRSS();
-    // Refresh RSS every 10 minutes
     setInterval(fetchRSS, 10 * 60 * 1000);
 }
 
 async function fetchRSS() {
+    var rssUrl = config.rss && config.rss.url;
+    if (!rssUrl) { useStaticMessages(); return; }
     try {
-        var rssUrl = config.rss && config.rss.url;
-        if (!rssUrl) {
-            setupStaticMessages();
-            return;
-        }
-
-        var apiUrl = RSS2JSON_API + encodeURIComponent(rssUrl);
-        var response = await fetch(apiUrl);
-        var data = await response.json();
-
-        if (data.status !== 'ok' || !data.items || data.items.length === 0) {
-            console.warn('RSS returned no items, trying fallback proxy...');
-            await fetchRSSFallback(rssUrl);
-            return;
-        }
-
-        var maxItems = (config.rss && config.rss.maxItems) || 15;
-        rssItems = [];
-
-        for (var i = 0; i < Math.min(data.items.length, maxItems); i++) {
-            var title = data.items[i].title;
-            if (title && title.trim()) {
-                rssItems.push(title.trim());
-            }
-        }
-
+        var data = await (await fetch(RSS2JSON_API + encodeURIComponent(rssUrl))).json();
+        if (data.status !== 'ok' || !data.items || !data.items.length) throw new Error('empty');
+        var max = (config.rss && config.rss.maxItems) || 15;
+        rssItems = data.items.slice(0, max).map(function(item) {
+            var img = item.thumbnail ||
+                (item.enclosure && item.enclosure.link &&
+                 item.enclosure.type && /image/.test(item.enclosure.type)
+                 ? item.enclosure.link : '');
+            return {
+                title:       (item.title       || '').trim(),
+                description: stripHtml(item.description || '').substring(0, 280).trim(),
+                image:       img || '',
+                pubDate:     item.pubDate || ''
+            };
+        }).filter(function(i) { return i.title; });
         startRssRotation();
-
-    } catch (err) {
-        console.error('RSS fetch failed:', err);
-        await fetchRSSFallback(rssUrl);
+    } catch(e) {
+        console.error('RSS primary failed, trying fallback:', e);
+        fetchRSSFallback(rssUrl);
     }
 }
 
-// Fallback: try allorigins proxy with XML parsing
 async function fetchRSSFallback(rssUrl) {
     try {
-        var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rssUrl);
-        var response = await fetch(proxyUrl);
-        var text = await response.text();
-
-        var parser = new DOMParser();
-        var xml = parser.parseFromString(text, 'text/xml');
-        var items = xml.querySelectorAll('item');
-
-        var maxItems = (config.rss && config.rss.maxItems) || 15;
-        rssItems = [];
-
-        for (var i = 0; i < Math.min(items.length, maxItems); i++) {
-            var titleEl = items[i].querySelector('title');
-            if (titleEl && titleEl.textContent && titleEl.textContent.trim()) {
-                rssItems.push(titleEl.textContent.trim());
+        var text = await (await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(rssUrl))).text();
+        var xml  = new DOMParser().parseFromString(text, 'text/xml');
+        var items = Array.from(xml.querySelectorAll('item'));
+        var max  = (config.rss && config.rss.maxItems) || 15;
+        rssItems = items.slice(0, max).map(function(item) {
+            var title = ((item.querySelector('title')       || {}).textContent || '').trim();
+            var desc  = stripHtml((item.querySelector('description') || {}).textContent || '').substring(0, 280).trim();
+            var encl  = item.querySelector('enclosure');
+            var img   = (encl && /image/.test(encl.getAttribute('type') || '')) ? (encl.getAttribute('url') || '') : '';
+            if (!img) {
+                var mc = item.getElementsByTagNameNS('http://search.yahoo.com/mrss/', 'content')[0];
+                if (mc) img = mc.getAttribute('url') || '';
             }
-        }
-
+            return { title: title, description: desc, image: img, pubDate: (item.querySelector('pubDate') || {}).textContent || '' };
+        }).filter(function(i) { return i.title; });
         startRssRotation();
-
-    } catch (err) {
-        console.error('RSS fallback also failed:', err);
-        setupStaticMessages();
+    } catch(e) {
+        console.error('RSS fallback failed:', e);
+        useStaticMessages();
     }
 }
 
 function startRssRotation() {
-    if (rssItems.length === 0) {
-        document.getElementById('ticker-text').textContent = 'No news available';
-        return;
-    }
-
+    if (!rssItems.length) { useStaticMessages(); return; }
     currentRssIndex = 0;
     showCurrentRssItem();
-
     if (rssInterval) clearInterval(rssInterval);
-    var rotationSec = (config.rss && config.rss.rotationSeconds) || 10;
-    rssInterval = setInterval(rotateRssItem, rotationSec * 1000);
+    var sec = (config.rss && config.rss.rotationSeconds) || 10;
+    rssInterval = setInterval(function() {
+        currentRssIndex = (currentRssIndex + 1) % rssItems.length;
+        showCurrentRssItem();
+    }, sec * 1000);
 }
 
 function showCurrentRssItem() {
-    if (rssItems.length === 0) return;
+    var item = rssItems[currentRssIndex];
+    var next = rssItems[(currentRssIndex + 1) % rssItems.length];
 
-    var ticker = document.getElementById('ticker-text');
-    ticker.style.animation = 'none';
-    void ticker.offsetWidth;
-    ticker.style.animation = 'ticker-fade 0.5s ease-in-out';
-    ticker.textContent = rssItems[currentRssIndex];
+    // Fade out
+    ['rss-headline','rss-description'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.opacity = '0';
+    });
+
+    setTimeout(function() {
+        document.getElementById('rss-headline').textContent    = item.title;
+        document.getElementById('rss-description').textContent = item.description || '';
+        document.getElementById('rss-time-ago').textContent    = getTimeAgo(item.pubDate);
+
+        // Featured image (left panel)
+        var fi = document.getElementById('rss-featured-img');
+        if (item.image) { fi.src = item.image; fi.style.opacity = '1'; }
+        else            { fi.src = '';          fi.style.opacity = '0'; }
+
+        // Thumbs (bottom right, overlapping)
+        var t1 = document.getElementById('rss-thumb-1');
+        var t2 = document.getElementById('rss-thumb-2');
+        if (item.image) { t1.src = item.image; t1.classList.add('visible'); }
+        else            { t1.classList.remove('visible'); }
+        if (next && next.image) { t2.src = next.image; t2.classList.add('visible'); }
+        else                    { t2.classList.remove('visible'); }
+
+        // Fade in
+        ['rss-headline','rss-description'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.style.opacity = '1';
+        });
+    }, 250);
 }
 
-function rotateRssItem() {
-    currentRssIndex = (currentRssIndex + 1) % rssItems.length;
-    showCurrentRssItem();
+function getTimeAgo(pubDate) {
+    if (!pubDate) return '';
+    var pub = new Date(pubDate);
+    if (isNaN(pub.getTime())) return '';
+    var diffMin = Math.floor((Date.now() - pub.getTime()) / 60000);
+    if (diffMin < 1)  return 'עכשיו';
+    if (diffMin < 60) return 'לפני ' + diffMin + ' דקות';
+    var h = Math.floor(diffMin / 60);
+    if (h < 24)       return 'לפני ' + h + ' שעות';
+    return 'לפני ' + Math.floor(h / 24) + ' ימים';
 }
 
-// Fallback: static messages from config
-function setupStaticMessages() {
-    var messages = (config.messages || []).filter(function(m) { return m.active; });
-
-    if (messages.length === 0) {
-        document.getElementById('ticker-text').textContent = config.building.name || 'Urban Tower';
-        return;
-    }
-
-    var idx = 0;
-    document.getElementById('ticker-text').textContent = messages[0].text;
-
-    setInterval(function() {
-        idx = (idx + 1) % messages.length;
-        var ticker = document.getElementById('ticker-text');
-        ticker.style.animation = 'none';
-        void ticker.offsetWidth;
-        ticker.style.animation = 'ticker-fade 0.5s ease-in-out';
-        ticker.textContent = messages[idx].text;
-    }, (config.messageRotationSeconds || 8) * 1000);
+function stripHtml(html) {
+    var d = document.createElement('div');
+    d.innerHTML = html;
+    return d.textContent || d.innerText || '';
 }
 
-// ============================================================
-// AUTO-REFRESH (reload config every 5 min to pick up changes)
-// ============================================================
+function useStaticMessages() {
+    var msgs = (config.messages || []).filter(function(m) { return m.active; });
+    rssItems = msgs.length
+        ? msgs.map(function(m) { return { title: m.text, description: '', image: '', pubDate: '' }; })
+        : [{ title: config.building.name || 'Urban Tower', description: '', image: '', pubDate: '' }];
+    startRssRotation();
+}
+
+// ── AUTO-REFRESH ─────────────────────────────────────────────────
 function setupAutoRefresh() {
     setInterval(async function() {
         try {
-            var newConfig = await loadConfig();
-
-            // Check if RSS URL changed
-            var oldRss = config.rss && config.rss.url;
-            var newRss = newConfig.rss && newConfig.rss.url;
-            if (oldRss !== newRss) {
-                config = newConfig;
-                fetchRSS();
-                console.log('RSS source updated');
-                return;
+            var nc = await loadConfig();
+            if (nc.rss && nc.rss.url !== (config.rss && config.rss.url)) {
+                config = nc; fetchRSS();
+            } else if (nc.building && nc.building.background !== config.building.background) {
+                config = nc; setupBackground();
+            } else {
+                config = nc;
             }
-
-            // Check if background (video/gif) changed
-            if (newConfig.building.background !== config.building.background) {
-                config.building = newConfig.building;
-                setupBackground();
-            }
-
-            config = newConfig;
-        } catch (err) {
-            console.error('Auto-refresh failed:', err);
-        }
+        } catch(e) { console.error('Auto-refresh failed:', e); }
     }, 5 * 60 * 1000);
 }
 
-// ============================================================
-// START
-// ============================================================
 document.addEventListener('DOMContentLoaded', init);
