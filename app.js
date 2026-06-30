@@ -63,7 +63,7 @@ function loadYoutubeVideo(videoId) {
     if (!yt) return;
     yt.src = 'https://www.youtube-nocookie.com/embed/' + videoId +
              '?autoplay=1&controls=0&modestbranding=1' +
-             '&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&vq=hd720' +
+             '&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&vq=medium' +
              '&list=RDnK5Jwi3Mpc0&listType=playlist';
     // Check after 8 seconds if video loaded — if still showing error, try next
     if (ytCheckTimer) clearTimeout(ytCheckTimer);
