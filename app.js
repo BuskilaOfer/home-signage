@@ -33,8 +33,11 @@ async function loadConfig() {
 
 // ── BACKGROUND ───────────────────────────────────────────────────
 function setupBackground() {
-    document.getElementById('bg-img').src        = config.building.background || 'assets/video.gif';
-    document.getElementById('building-logo').src = config.building.logo        || 'assets/logo.svg';
+    // bg-img may be absent if background is disabled — guard to avoid crashing init()
+    var bgEl = document.getElementById('bg-img');
+    if (bgEl) bgEl.src = config.building.background || 'assets/video.gif';
+    var logoEl = document.getElementById('building-logo');
+    if (logoEl) logoEl.src = config.building.logo || 'assets/logo.svg';
 }
 
 // ── YOUTUBE ──────────────────────────────────────────────────────
