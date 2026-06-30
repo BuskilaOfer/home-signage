@@ -15,7 +15,6 @@
     </div>
 
     <div class="main-area">
-        <!-- Left: YouTube lofi with fallback rotation -->
         <div class="youtube-panel">
             <div class="youtube-card">
                 <iframe id="yt-player"
@@ -27,7 +26,6 @@
             </div>
         </div>
 
-        <!-- Right: Clock + Weather -->
         <div class="right-panel">
             <div id="clock-widget" class="widget clock-widget">
                 <div id="clock-time" class="clock-time">00:00:00</div>
@@ -68,10 +66,12 @@
             <div id="rss-headline"    class="rss-headline"    dir="rtl">&#x05D8;&#x05D5;&#x05E2;&#x05DF; &#x05D7;&#x05D3;&#x05E9;&#x05D5;&#x05EA;...</div>
             <div id="rss-description" class="rss-description" dir="rtl"></div>
         </div>
-        <div class="rss-thumbs-panel">
-            <img id="rss-thumb-1" src="" alt="" class="rss-thumb rss-thumb-1">
-            <img id="rss-thumb-2" src="" alt="" class="rss-thumb rss-thumb-2">
+
+        <!-- Single image — always the CURRENT article -->
+        <div class="rss-image-panel">
+            <img id="rss-article-img" src="" alt="" class="rss-article-img">
         </div>
+
         <div class="building-logo-panel">
             <img id="building-logo" src="assets/logo.svg" alt="Urban Tower">
         </div>
