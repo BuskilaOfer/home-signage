@@ -18,10 +18,10 @@ html, body {
     min-width: 100%; min-height: 100%;
     object-fit: cover;
 }
-/* Dark overlay so glass panels stay readable */
+/* Dark overlay so panels stay readable */
 .bg-overlay {
     position: absolute; inset: 0;
-    background: rgba(0, 8, 28, 0.42);
+    background: rgba(0, 8, 28, 0.45);
 }
 
 /* ── Main area ───────────────────────────────────────────────── */
@@ -61,14 +61,12 @@ html, body {
     min-width: 0;
 }
 
-/* ── Unified glass widget ────────────────────────────────────── */
+/* ── Unified glass widget — NO backdrop-filter (GPU disabled on RPi) ── */
 .widget {
-    background: rgba(8, 18, 50, 0.70);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(8, 18, 52, 0.88);
     border-radius: 18px;
     border: 1px solid rgba(255,255,255,0.16);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.50);
     overflow: hidden;
 }
 
@@ -128,16 +126,14 @@ html, body {
 .fc-icon svg { display: block; }
 .fc-temps { font-size: 1.05rem; opacity: 0.8; }
 
-/* ── RSS Bar ─────────────────────────────────────────────────── */
+/* ── RSS Bar — NO backdrop-filter ────────────────────────────── */
 .rss-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 300px;
-    background: rgba(8, 18, 50, 0.70);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(8, 18, 52, 0.88);
     border-top: 1px solid rgba(255,255,255,0.16);
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.45);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.50);
     display: flex; align-items: stretch;
     z-index: 10;
 }
