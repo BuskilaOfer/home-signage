@@ -1,265 +1,216 @@
-/* Reset & Base */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* Reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-    width: 100vw;
-    height: 100vh;
+    width: 100vw; height: 100vh;
     overflow: hidden;
     font-family: 'Rubik', sans-serif;
     color: white;
+    background: #000;
 }
 
-/* Full-screen Video/GIF Background - urban-tower.co.il style */
-.video-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    overflow: hidden;
-}
-
-.bg-video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
+/* ── Background ─────────────────────────────────────────────── */
+.bg-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.bg-img {
+    position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
+    min-width: 100%; min-height: 100%;
     object-fit: cover;
 }
-
-/* Dark overlay on top of video for text readability */
 .bg-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 1;
+    position: absolute; inset: 0;
+    background: rgba(0, 0, 0, 0.35);
 }
 
-/* Building Logo - Top Left */
+/* ── Top-left logo ───────────────────────────────────────────── */
 .top-logo {
+    position: fixed; top: 28px; left: 28px; z-index: 20;
+}
+.top-logo img {
+    height: 66px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+}
+
+/* ── Main area (above RSS bar) ───────────────────────────────── */
+.main-area {
     position: fixed;
-    top: 40px;
-    left: 40px;
+    top: 0; left: 0; right: 0; bottom: 370px;
+    display: flex;
     z-index: 10;
 }
 
-.top-logo img {
-    height: 80px;
-    width: auto;
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+/* Left: RSS image card */
+.rss-image-panel {
+    flex: 1;
+    padding: 36px 16px 28px 36px;
+    display: flex;
+}
+.rss-image-card {
+    flex: 1;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center;
+}
+.rss-featured-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: opacity 0.4s ease;
 }
 
-/* Widget base - frosted glass effect */
+/* Right panel */
+.right-panel {
+    width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 28px 28px 22px 16px;
+}
+
+/* ── Widget base (frosted glass) ─────────────────────────────── */
 .widget {
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 20px 28px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(10, 20, 48, 0.68);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.13);
 }
 
-/* Clock Widget - Top Right */
+/* ── Clock ───────────────────────────────────────────────────── */
 .clock-widget {
-    position: fixed;
-    top: 40px;
-    right: 40px;
+    padding: 24px 28px 22px;
     text-align: center;
-    transition: background-color 0.15s ease-out;
 }
-
-/* Clock pulse: background flashes brighter every second */
-.clock-pulse {
-    animation: clock-bg-pulse 1s ease-out;
-}
-
 @keyframes clock-bg-pulse {
-    0% { background: rgba(255, 255, 255, 0.12); }
-    15% { background: rgba(255, 255, 255, 0.06); }
-    100% { background: rgba(0, 0, 0, 0.45); }
+    0%   { background: rgba(60, 120, 220, 0.30); }
+    100% { background: rgba(10, 20, 48, 0.68);   }
 }
+.clock-pulse { animation: clock-bg-pulse 0.8s ease-out; }
 
 .clock-time {
-    font-size: 5rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    line-height: 1;
+    font-size: 8rem; font-weight: 700;
+    letter-spacing: 3px; line-height: 1;
 }
-
 .clock-date {
-    font-size: 1.8rem;
-    font-weight: 300;
-    margin-top: 8px;
-    opacity: 0.9;
+    font-size: 2.6rem; font-weight: 300;
+    margin-top: 10px; opacity: 0.9;
 }
 
-/* Weather Widget - Mid Right */
+/* ── Weather ─────────────────────────────────────────────────── */
 .weather-widget {
-    position: fixed;
-    top: 220px;
-    right: 40px;
-    min-width: 320px;
+    flex: 1;
+    padding: 22px 26px 18px;
+    display: flex; flex-direction: column; gap: 10px;
 }
-
-.weather-header {
+.weather-row-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 10px;
+}
+.weather-location { display: flex; flex-direction: column; gap: 4px; }
+.weather-city { font-size: 1.9rem; font-weight: 500; }
+.weather-day  { font-size: 1.5rem; font-weight: 300; opacity: 0.85; }
+
+.weather-temp-group {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+}
+.weather-temp { font-size: 4.8rem; font-weight: 700; line-height: 1; }
+.weather-hl {
+    display: flex; gap: 14px;
+    font-size: 1.15rem; opacity: 0.8;
 }
 
-.weather-location {
-    font-size: 1.3rem;
-    font-weight: 400;
+.weather-center {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
 }
-
-.weather-current {
-    text-align: right;
-}
-
-.weather-temp {
-    font-size: 2.5rem;
-    font-weight: 700;
-}
-
-.weather-highlow {
-    font-size: 0.9rem;
-    opacity: 0.85;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.weather-icon-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 12px 0;
-}
-
-.weather-icon {
-    width: 64px;
-    height: 64px;
-    filter: invert(1);
-}
-
-#weather-desc {
-    font-size: 1.2rem;
-    font-weight: 300;
-}
+.weather-main-icon { line-height: 1; }
+.weather-main-icon svg { display: block; }
+.weather-desc { font-size: 2rem; font-weight: 300; opacity: 0.9; }
 
 .weather-forecast {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 16px;
+    display: flex; justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.15);
     padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
-
 .forecast-day {
-    text-align: center;
-    font-size: 0.9rem;
+    flex: 1; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
 }
+.fc-name  { font-size: 1.3rem; font-weight: 500; }
+.fc-icon  { line-height: 1; }
+.fc-icon svg { display: block; }
+.fc-temps { font-size: 1.1rem; opacity: 0.8; }
 
-.forecast-day .day-name {
-    font-weight: 500;
-    margin-bottom: 6px;
-}
-
-.forecast-day .day-icon {
-    font-size: 1.4rem;
-    margin-bottom: 4px;
-}
-
-.forecast-day .day-temps {
-    font-size: 0.8rem;
-    opacity: 0.8;
-}
-
-/* Ticker Bar - Bottom */
-.ticker-bar {
+/* ── RSS Bar (bottom) ────────────────────────────────────────── */
+.rss-bar {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 80px; /* leave room for logo */
-    height: 100px;
-    background: #E8652B;
-    display: flex;
-    align-items: center;
-    padding: 0 40px;
-    gap: 30px;
+    bottom: 0; left: 0; right: 0;
+    height: 370px;
+    background: rgba(8, 14, 30, 0.90);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255,255,255,0.09);
+    display: flex; align-items: stretch;
+    z-index: 10;
 }
 
-.ticker-icon {
-    flex-shrink: 0;
-}
-
-.ticker-icon svg {
-    width: 48px;
-    height: 48px;
-}
-
-.ticker-content {
+.rss-text-panel {
     flex: 1;
+    padding: 30px 40px;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: 12px;
     overflow: hidden;
 }
+.rss-meta-row {
+    display: flex; align-items: center; gap: 14px;
+    direction: rtl;
+}
+.rss-svg-icon  { width: 38px; height: 38px; fill: #E8652B; flex-shrink: 0; }
+.rss-time-ago  { font-size: 1.6rem; color: #E8652B; font-weight: 600; }
 
-.ticker-text {
-    font-size: 1.6rem;
-    font-weight: 400;
-    white-space: nowrap;
-    animation: ticker-fade 0.5s ease-in-out;
+.rss-headline {
+    font-size: 3.2rem; font-weight: 700; line-height: 1.25;
+    direction: rtl; text-align: right;
+    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    transition: opacity 0.3s ease;
+}
+.rss-description {
+    font-size: 1.65rem; font-weight: 400; line-height: 1.45; opacity: 0.82;
+    direction: rtl; text-align: right;
+    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    transition: opacity 0.3s ease;
 }
 
-@keyframes ticker-fade {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Thumbnail images (bottom right) */
+.rss-thumbs-panel {
+    width: 320px;
+    position: relative;
+    flex-shrink: 0;
 }
-
-/* Building Logo - Bottom Right */
-.building-logo {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    width: 80px;
-    height: 100px;
-    background: #2C3E50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
+.rss-thumb {
+    position: absolute;
+    width: 230px; height: 155px;
+    object-fit: cover; border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.25);
+    opacity: 0; transition: opacity 0.4s ease;
 }
+.rss-thumb.visible { opacity: 1; }
+.rss-thumb-1 { left: 20px;  top: 50%; transform: translateY(-55%) rotate(-3deg); z-index: 1; }
+.rss-thumb-2 { left: 70px;  top: 50%; transform: translateY(-46%) rotate( 3deg); z-index: 2; }
 
-.building-logo img {
-    max-width: 100%;
-    max-height: 100%;
+/* Building logo */
+.building-logo-panel {
+    width: 170px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px 18px;
+    border-left: 1px solid rgba(255,255,255,0.08);
+}
+.building-logo-panel img {
+    max-width: 100%; max-height: 130px;
     object-fit: contain;
-}
-
-/* Responsive for TV (1920x1080) */
-@media (min-width: 1920px) {
-    .clock-time {
-        font-size: 6rem;
-    }
-    .clock-date {
-        font-size: 2.2rem;
-    }
-    .weather-widget {
-        min-width: 380px;
-    }
-    .ticker-text {
-        font-size: 2rem;
-    }
 }
