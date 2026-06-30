@@ -281,13 +281,16 @@ function showCurrentRssItem() {
         document.getElementById('rss-description').textContent = item.description || '';
         document.getElementById('rss-time-ago').textContent    = getTimeAgo(item.pubDate);
 
-        // Thumbnails — only in the news bar (no featured image in main area)
-        var t1 = document.getElementById('rss-thumb-1');
-        var t2 = document.getElementById('rss-thumb-2');
-        if (t1) { if (item.image) { t1.src = item.image; t1.classList.add('visible'); }
-                  else             { t1.classList.remove('visible'); } }
-        if (t2) { if (next && next.image) { t2.src = next.image; t2.classList.add('visible'); }
-                  else                    { t2.classList.remove('visible'); } }
+        // Single image — always the CURRENT article (no confusion with next)
+        var img = document.getElementById('rss-article-img');
+        if (img) {
+            img.classList.remove('visible');
+            if (item.image) {
+                img.src = item.image;
+                img.onload  = function() { img.classList.add('visible'); };
+                img.onerror = function() { img.classList.remove('visible'); };
+            }
+        }
 
         ['rss-headline','rss-description'].forEach(function(id) {
             var el = document.getElementById(id);
