@@ -40,12 +40,12 @@ function setupBackground() {
 // ── YOUTUBE ──────────────────────────────────────────────────────
 // Verified-embeddable lofi video IDs (non-live, long videos)
 var YT_VIDEOS = [
-    '4xDzrJKXOOY',  // synthwave radio
-    'Na0w3Mz46GA',  // asian lofi
-    'jfKfPfyJRdk',  // lofi hip hop radio
-    'lZmNIUVKUvk',  // lofi chill
-    'rUxyKA_-grg',  // rainy day lofi
-    'hHW1oY26kxQ'   // lofi hip hop
+    'nK5Jwi3Mpc0',  // requested playlist seed
+    '4xDzrJKXOOY',  // synthwave radio (fallback)
+    'Na0w3Mz46GA',  // asian lofi (fallback)
+    'jfKfPfyJRdk',  // lofi hip hop radio (fallback)
+    'lZmNIUVKUvk',  // lofi chill (fallback)
+    'hHW1oY26kxQ'   // lofi hip hop (fallback)
 ];
 var ytIndex = 0;
 var ytCheckTimer = null;
@@ -60,7 +60,8 @@ function loadYoutubeVideo(videoId) {
     if (!yt) return;
     yt.src = 'https://www.youtube-nocookie.com/embed/' + videoId +
              '?autoplay=1&controls=0&modestbranding=1' +
-             '&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&start=30&vq=hd720';
+             '&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&vq=hd720' +
+             '&list=RDnK5Jwi3Mpc0&listType=playlist';
     // Check after 8 seconds if video loaded — if still showing error, try next
     if (ytCheckTimer) clearTimeout(ytCheckTimer);
     ytCheckTimer = setTimeout(function() {
