@@ -41,133 +41,155 @@ html, body {
     position: relative;
 }
 .youtube-card iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
     border: none;
 }
 
 /* ── Right panel ─────────────────────────────────────────────── */
 .right-panel {
-    width: 600px;
-    display: flex; flex-direction: column; gap: 18px;
+    width: 580px;
+    display: flex; flex-direction: column; gap: 16px;
     padding: 28px 28px 22px 14px;
+    min-width: 0;
 }
 
-/* ── Widget (frosted glass) ──────────────────────────────────── */
+/* ── Unified glass widget ────────────────────────────────────── */
 .widget {
-    background: rgba(10, 20, 48, 0.68);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(12, 22, 52, 0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border-radius: 18px;
     border: 1px solid rgba(255,255,255,0.13);
+    overflow: hidden;
 }
 
 /* ── Clock ───────────────────────────────────────────────────── */
-.clock-widget { padding: 24px 28px 22px; text-align: center; }
-@keyframes clock-bg-pulse {
-    0%   { background: rgba(60,120,220,0.30); }
-    100% { background: rgba(10,20,48,0.68);   }
+.clock-widget {
+    padding: 20px 24px 18px;
+    text-align: center;
+    min-width: 0;
 }
-.clock-pulse { animation: clock-bg-pulse 0.8s ease-out; }
-.clock-time { font-size: 8rem; font-weight: 700; letter-spacing: 3px; line-height: 1; }
-.clock-date { font-size: 2.6rem; font-weight: 300; margin-top: 10px; opacity: 0.9; }
+@keyframes clock-bg-pulse {
+    0%   { background: rgba(60,120,220,0.22); }
+    100% { background: transparent; }
+}
+.clock-pulse { animation: clock-bg-pulse 0.9s ease-out; }
+
+.clock-time {
+    font-size: 6.4rem; font-weight: 700;
+    letter-spacing: 2px; line-height: 1;
+    white-space: nowrap; overflow: hidden;
+}
+.clock-date {
+    font-size: 2.2rem; font-weight: 300;
+    margin-top: 8px; opacity: 0.9;
+    white-space: nowrap; overflow: hidden;
+}
 
 /* ── Weather ─────────────────────────────────────────────────── */
 .weather-widget {
-    flex: 1; padding: 22px 26px 18px;
+    flex: 1; padding: 20px 24px 16px;
     display: flex; flex-direction: column; gap: 10px;
 }
 .weather-row-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .weather-location { display: flex; flex-direction: column; gap: 4px; }
-.weather-city { font-size: 1.9rem; font-weight: 500; }
-.weather-day  { font-size: 1.5rem; font-weight: 300; opacity: 0.85; }
+.weather-city { font-size: 1.8rem; font-weight: 500; }
+.weather-day  { font-size: 1.4rem; font-weight: 300; opacity: 0.85; }
 .weather-temp-group { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.weather-temp { font-size: 4.8rem; font-weight: 700; line-height: 1; }
-.weather-hl   { display: flex; gap: 14px; font-size: 1.15rem; opacity: 0.8; }
+.weather-temp { font-size: 4.4rem; font-weight: 700; line-height: 1; }
+.weather-hl   { display: flex; gap: 14px; font-size: 1.1rem; opacity: 0.8; }
 .weather-center {
     flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 8px;
+    align-items: center; justify-content: center; gap: 6px;
 }
 .weather-main-icon { line-height: 1; }
 .weather-main-icon svg { display: block; }
-.weather-desc { font-size: 2rem; font-weight: 300; opacity: 0.9; }
+.weather-desc { font-size: 1.9rem; font-weight: 300; opacity: 0.9; }
 .weather-forecast {
     display: flex; justify-content: space-between;
     border-top: 1px solid rgba(255,255,255,0.15);
-    padding-top: 12px;
+    padding-top: 10px;
 }
 .forecast-day {
     flex: 1; text-align: center;
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
-.fc-name  { font-size: 1.3rem; font-weight: 500; }
+.fc-name  { font-size: 1.2rem; font-weight: 500; }
 .fc-icon  { line-height: 1; }
 .fc-icon svg { display: block; }
-.fc-temps { font-size: 1.1rem; opacity: 0.8; }
+.fc-temps { font-size: 1.05rem; opacity: 0.8; }
 
-/* ── RSS Bar ─────────────────────────────────────────────────── */
+/* ── RSS Bar — SAME glass color as widgets ───────────────────── */
 .rss-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 300px;
-    background: rgba(8,14,30,0.92);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-top: 1px solid rgba(255,255,255,0.09);
+    background: rgba(12, 22, 52, 0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(255,255,255,0.13);
     display: flex; align-items: stretch;
     z-index: 10;
 }
 
+/* RSS text */
 .rss-text-panel {
-    flex: 1; padding: 22px 36px;
+    flex: 1; padding: 22px 32px;
     display: flex; flex-direction: column; justify-content: center; gap: 10px;
     overflow: hidden;
 }
-.rss-meta-row { display: flex; align-items: center; gap: 14px; direction: rtl; }
-.rss-svg-icon { width: 34px; height: 34px; fill: #E8652B; flex-shrink: 0; }
-.rss-time-ago { font-size: 1.5rem; color: #E8652B; font-weight: 600; }
+.rss-meta-row { display: flex; align-items: center; gap: 12px; direction: rtl; }
+.rss-svg-icon { width: 32px; height: 32px; fill: #E8652B; flex-shrink: 0; }
+.rss-time-ago { font-size: 1.4rem; color: #E8652B; font-weight: 600; }
 
 .rss-headline {
-    font-size: 2.8rem; font-weight: 700; line-height: 1.25;
+    font-size: 2.7rem; font-weight: 700; line-height: 1.25;
     direction: rtl; text-align: right;
     overflow: hidden;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     transition: opacity 0.3s ease;
 }
 .rss-description {
-    font-size: 1.5rem; font-weight: 400; line-height: 1.4; opacity: 0.82;
+    font-size: 1.45rem; font-weight: 400; line-height: 1.4; opacity: 0.82;
     direction: rtl; text-align: right;
     overflow: hidden;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     transition: opacity 0.3s ease;
 }
 
-/* Thumbnails — only in the news bar */
-.rss-thumbs-panel {
-    width: 300px; flex-shrink: 0;
-    position: relative;
-}
-.rss-thumb {
-    position: absolute;
-    width: 215px; height: 145px;
-    object-fit: cover; border-radius: 10px;
-    border: 2px solid rgba(255,255,255,0.25);
-    opacity: 0; transition: opacity 0.4s ease;
-}
-.rss-thumb.visible { opacity: 1; }
-.rss-thumb-1 { left: 18px; top: 50%; transform: translateY(-55%) rotate(-3deg); z-index: 1; }
-.rss-thumb-2 { left: 65px; top: 50%; transform: translateY(-46%) rotate( 3deg); z-index: 2; }
-
-/* Big U logo panel */
-.building-logo-panel {
-    width: 220px; flex-shrink: 0;
+/* ONE image — current article only, clearly correlated to text */
+.rss-image-panel {
+    width: 280px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    padding: 16px 20px;
-    border-left: 1px solid rgba(255,255,255,0.08);
+    padding: 18px 10px;
+    border-left: 1px solid rgba(255,255,255,0.10);
+}
+.rss-article-img {
+    width: 260px; height: 160px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.20);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.rss-article-img.visible { opacity: 1; }
+.rss-no-image {
+    width: 260px; height: 160px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.3;
+}
+
+/* Building logo */
+.building-logo-panel {
+    width: 200px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px 18px;
+    border-left: 1px solid rgba(255,255,255,0.10);
 }
 .building-logo-panel img {
-    max-width: 100%; max-height: 200px;
+    max-width: 100%; max-height: 190px;
     object-fit: contain;
 }
