@@ -15,24 +15,23 @@
         <div class="bg-overlay"></div>
     </div>
 
-    <!-- Top-left U logo -->
-    <div class="top-logo">
-        <img src="assets/u-logo.png" alt="U">
-    </div>
-
     <!-- Main area (above RSS bar) -->
     <div class="main-area">
 
-        <!-- Left: Featured RSS article image -->
-        <div class="rss-image-panel">
-            <div class="rss-image-card" id="rss-image-card">
-                <img id="rss-featured-img" src="" alt="" class="rss-featured-img">
+        <!-- Left: YouTube autoplay -->
+        <div class="youtube-panel">
+            <div class="youtube-card">
+                <iframe id="yt-player"
+                    src="https://www.youtube.com/embed/videoseries?list=PLjp0AEEJ0-fHgANMYEKhB_LhEbOFrXQC&autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1"
+                    frameborder="0"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
             </div>
         </div>
 
         <!-- Right: Clock + Weather -->
         <div class="right-panel">
-
             <div id="clock-widget" class="widget clock-widget">
                 <div id="clock-time" class="clock-time">00:00:00</div>
                 <div id="clock-date" class="clock-date">1 June 2026</div>
@@ -58,11 +57,10 @@
                 </div>
                 <div class="weather-forecast" id="weather-forecast"></div>
             </div>
-
         </div>
     </div>
 
-    <!-- RSS Bar (bottom) -->
+    <!-- RSS Bar (bottom) — smaller, image only inside bar -->
     <div class="rss-bar">
         <div class="rss-text-panel">
             <div class="rss-meta-row">
@@ -71,13 +69,17 @@
                 </svg>
                 <span id="rss-time-ago" class="rss-time-ago">&#x05DC;&#x05E4;&#x05E0;&#x05D9; 5 &#x05D3;&#x05E7;&#x05D5;&#x05EA;</span>
             </div>
-            <div id="rss-headline"     class="rss-headline"     dir="rtl">&#x05D8;&#x05D5;&#x05E2;&#x05DF; &#x05D7;&#x05D3;&#x05E9;&#x05D5;&#x05EA;...</div>
-            <div id="rss-description"  class="rss-description"  dir="rtl"></div>
+            <div id="rss-headline"    class="rss-headline"    dir="rtl">&#x05D8;&#x05D5;&#x05E2;&#x05DF; &#x05D7;&#x05D3;&#x05E9;&#x05D5;&#x05EA;...</div>
+            <div id="rss-description" class="rss-description" dir="rtl"></div>
         </div>
+
+        <!-- Article thumbnails (RSS images — only here) -->
         <div class="rss-thumbs-panel">
             <img id="rss-thumb-1" src="" alt="" class="rss-thumb rss-thumb-1">
             <img id="rss-thumb-2" src="" alt="" class="rss-thumb rss-thumb-2">
         </div>
+
+        <!-- Big U logo -->
         <div class="building-logo-panel">
             <img id="building-logo" src="assets/logo.svg" alt="Urban Tower">
         </div>
