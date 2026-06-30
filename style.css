@@ -5,7 +5,7 @@ html, body {
     overflow: hidden;
     font-family: 'Rubik', sans-serif;
     color: white;
-    background: #0a1428;
+    background: transparent;
 }
 
 /* Background: building photo via CSS background-image (works without GPU) */
@@ -20,7 +20,7 @@ html, body {
 /* Dark overlay so panels stay readable */
 .bg-overlay {
     position: absolute; inset: 0;
-    background: rgba(0, 8, 28, 0.55);
+    background: rgba(0, 8, 28, 0.25);
 }
 
 /* Main area */
