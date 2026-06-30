@@ -14,12 +14,9 @@
     <div class="main-area">
         <div class="youtube-panel">
             <div class="youtube-card">
-                <iframe id="yt-player"
-                    src="about:blank"
-                    frameborder="0"
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    allowfullscreen>
-                </iframe>
+                <!-- YouTube video rendered by mpv (hardware decode) via Wayland overlay -->
+                <!-- iframe removed to eliminate software decode CPU load -->
+                <div id="yt-player" style="width:100%;height:100%;background:#000;"></div>
             </div>
         </div>
 
