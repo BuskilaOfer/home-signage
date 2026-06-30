@@ -5,23 +5,23 @@ html, body {
     overflow: hidden;
     font-family: 'Rubik', sans-serif;
     color: white;
-    background: transparent;
-}
-
-/* Background: building photo via CSS background-image (works without GPU) */
-.bg-wrap {
-    position: fixed; inset: 0; z-index: 0;
+    background-color: #0a1428;
     background-image: url("assets/building.jpg");
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
+    background-attachment: scroll;
 }
 
-/* Dark overlay so panels stay readable */
-.bg-overlay {
-    position: absolute; inset: 0;
-    background: rgba(0, 5, 20, 0.20);
+/* Semi-transparent overlay - placed as fixed div above body bg */
+.bg-wrap {
+    position: fixed; inset: 0; z-index: 0;
+    background: rgba(0, 5, 20, 0.25);
+    pointer-events: none;
 }
+
+/* bg-overlay inside bg-wrap is no longer needed but keep for HTML compatibility */
+.bg-overlay { display: none; }
 
 /* Main area */
 .main-area {
@@ -62,9 +62,9 @@ html, body {
 
 /* Unified glass widget - NO backdrop-filter (GPU disabled on RPi) */
 .widget {
-    background: rgba(8, 18, 52, 0.68);
+    background: rgba(8, 18, 52, 0.72);
     border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.18);
     box-shadow: 0 8px 32px rgba(0,0,0,0.50);
     overflow: hidden;
 }
@@ -130,7 +130,7 @@ html, body {
     position: fixed;
     bottom: 0; left: 0; right: 0;
     height: 300px;
-    background: rgba(8, 18, 52, 0.68);
+    background: rgba(8, 18, 52, 0.72);
     border-top: 1px solid rgba(255,255,255,0.16);
     box-shadow: 0 -4px 24px rgba(0,0,0,0.50);
     display: flex; align-items: stretch;
