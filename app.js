@@ -14,7 +14,7 @@ async function init() {
     try {
         config = await loadConfig();
         setupBackground();
-        setupYoutube();
+        // setupYoutube(); — replaced by mpv hardware player (youtube-player.sh)
         setupClock();
         setupWeather();
         setupRSS();
