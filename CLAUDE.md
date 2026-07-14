@@ -78,8 +78,9 @@ Running on a **Raspberry Pi 3B** (BCM2837, vc4 GPU) connected to a 1920×1080 di
 | Board | Raspberry Pi 3B Rev 1.2, BCM2837 64-bit |
 | GPU | Broadcom VideoCore IV (vc4 DRM driver) |
 | OS | Raspberry Pi OS Bookworm (Debian 13 trixie) |
-| Display | 1920×1080, Wayland output |
+| Display | 1920×1080, Wayland output — **LG TV over HDMI** (ELD reports LPCM audio support) |
 | Decoder | bcm2835-codec V4L2 M2M at `/dev/video10` (H.264 hardware decode) |
+| Audio out | HDMI → LG TV speakers. ALSA `card 0: vc4hdmi` (HDMI) / `card 1: Headphones` (3.5mm jack, alternate) |
 
 ---
 
@@ -308,6 +309,7 @@ See "Playlist management" under the mpv YouTube Player section.
 | macOS `arp` strips MAC zeros | Prints `b8:27:eb:7a:60:7`, not `...60:07`. `find-pi.sh` normalizes both sides — don't string-compare raw MACs. |
 | macOS default bash is 3.2 | No `${var,,}` / `${var^^}` / associative arrays in helper scripts. `find-pi.sh` lowercases via `tr`. Keep helpers bash-3.2 safe. |
 | `nc` blocked in this env | Port scans via `nc` are denied by user rules. Probe reachability with `ping` or by attempting the actual SSH instead. |
+| Stale `*.service` files | `rpi-setup/signage-audio.service` & `signage-kiosk.service` are **dead legacy** (`User=pi`, `/home/pi/signage/`, X11 `DISPLAY=:0`). The live kiosk is user `ofer` + labwc autostart (Wayland), NOT systemd. Ignore them — they're `inactive`. |
 
 ---
 
@@ -338,6 +340,17 @@ nohup /home/ofer/kiosk/start.sh > /dev/null 2>&1 &
 
 # Check hardware decode
 ls /dev/video*    # should include /dev/video10 (bcm2835-codec)
+
+# --- Audio (HDMI) ---
+# Is audio actually flowing? mpv talks straight to ALSA (bypasses PipeWire),
+# so wpctl/pw won't show the stream — check the kernel PCM instead:
+cat /proc/asound/card0/pcm0p/sub0/status    # state: RUNNING + advancing hw_ptr = live
+cat /proc/asound/card0/eld#0                 # monitor_name (e.g. "LG TV") + supported codecs
+aplay -l                                     # card 0 = vc4hdmi (HDMI), card 1 = Headphones (3.5mm)
+mpv --ao=alsa --audio-device=help            # list device names mpv can target
+# Play a 3s test tone straight to HDMI (should be audible on the TV):
+timeout 6 mpv --no-config --ao=alsa --audio-device="alsa/plughw:CARD=vc4hdmi,DEV=0" \
+  --volume=100 --length=3 "av://lavfi:sine=frequency=660:duration=3"
 ```
 
 ---
@@ -354,6 +367,7 @@ ls /dev/video*    # should include /dev/video10 (bcm2835-codec)
 8. **RSS via rss2json proxy** — RSS feeds block CORS; proxy converts to JSON and adds CORS headers
 9. **labwc window rules** — only reliable way to position mpv Wayland window at exact pixel coordinates
 10. **480p h264 cap on YouTube** — balances quality vs CPU (v4l2m2m-copy at 480p ≈ 20% CPU vs 52% at 720p)
+11. **Audio direct to HDMI via ALSA** — PipeWire/WirePlumber spawns no HDMI sink at boot on this board, so mpv is pinned to `alsa/plughw:CARD=vc4hdmi,DEV=0` (by card name, not index). Bypasses the flaky sink entirely.
 
 ---
 
@@ -365,8 +379,10 @@ ls /dev/video*    # should include /dev/video10 (bcm2835-codec)
 - Weather widget: current temp + condition + 4-day forecast (Open-Meteo)
 - Hebrew RTL RSS news with image thumbnail (Ynet)
 - YouTube video overlay via mpv hardware decode (v4l2m2m-copy)
+- HDMI audio out to the LG TV (mpv → ALSA `plughw:CARD=vc4hdmi`, verified `state: RUNNING`)
 - Auto-deploy: push to main → Pi reloads within ~2 minutes
 - Labwc window rule pins mpv at exact youtube-card position
+- Git-managed YouTube playlist (`playlist.json`) with ~1–2 min live auto-reload
 
 ## What Could Be Improved 🔧
 
