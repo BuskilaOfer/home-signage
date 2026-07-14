@@ -1,13 +1,37 @@
 {
   "_comment": "YouTube playlist for the kiosk video overlay. Edit + push; the Pi auto-reloads within ~1-2 min and reloops forever. 'id' accepts a bare video ID or a full YouTube URL. Set 'enabled': false to skip a video without deleting it. Videos play top-to-bottom in the order listed.",
   "videos": [
-    { "id": "nK5Jwi3Mpc0", "enabled": true },
-    { "id": "4xDzrJKXOOY", "enabled": true },
-    { "id": "jfKfPfyJRdk", "enabled": true },
-    { "id": "Na0w3Mz46GA", "enabled": true },
-    { "id": "5qap5aO4i9A", "enabled": true },
-    { "id": "DWcJFNfaw9c", "enabled": true },
-    { "id": "lTRiuFIWV54", "enabled": true },
-    { "id": "XULUBg_ZcAU", "enabled": true }
+    {
+      "id": "nK5Jwi3Mpc0",
+      "enabled": true
+    },
+    {
+      "id": "4xDzrJKXOOY",
+      "enabled": true
+    },
+    {
+      "id": "jfKfPfyJRdk",
+      "enabled": true
+    },
+    {
+      "id": "Na0w3Mz46GA",
+      "enabled": true
+    },
+    {
+      "id": "5qap5aO4i9A",
+      "enabled": true
+    },
+    {
+      "id": "DWcJFNfaw9c",
+      "enabled": true
+    },
+    {
+      "id": "lTRiuFIWV54",
+      "enabled": true
+    },
+    {
+      "id": "XULUBg_ZcAU",
+      "enabled": false
+    }
   ]
 }
