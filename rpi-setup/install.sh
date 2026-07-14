@@ -31,6 +31,8 @@ mkdir -p "$KIOSK_DIR"
 cp start.sh          "$KIOSK_DIR/"
 cp youtube-player.sh "$KIOSK_DIR/"
 cp watch-deploy.sh   "$KIOSK_DIR/"
+cp watch-playlist.sh "$KIOSK_DIR/"
+cp build-playlist.sh "$KIOSK_DIR/"
 chmod +x "$KIOSK_DIR/"*.sh
 
 # 4. labwc config

@@ -106,7 +106,8 @@ GitHub Pages (this repo)              Raspberry Pi 3B
 | `chromium --kiosk` | Renders the GitHub Pages web UI fullscreen |
 | `mpv` | Plays YouTube videos as a Wayland window pinned over the youtube-card area |
 | `watch-deploy.sh` | Polls GitHub API every 60 s; reloads Chromium when a new commit is detected |
-| `youtube-player.sh` | Keeps mpv running in a loop; restarts on crash |
+| `youtube-player.sh` | Fetches+builds playlist at boot, keeps mpv running in a loop; restarts on crash/on-demand |
+| `watch-playlist.sh` | Polls `playlist.json` every 60 s; rebuilds m3u + restarts mpv when the playlist changes |
 
 ---
 
@@ -115,13 +116,17 @@ GitHub Pages (this repo)              Raspberry Pi 3B
 | Path | Purpose |
 |------|---------|
 | `/home/ofer/kiosk/start.sh` | Launches Chromium with all flags |
-| `/home/ofer/kiosk/youtube-player.sh` | Builds playlist, runs mpv loop |
+| `/home/ofer/kiosk/youtube-player.sh` | Fetches+builds playlist at boot, runs mpv loop |
+| `/home/ofer/kiosk/build-playlist.sh` | Transforms `playlist.json` → `/tmp/yt-playlist.m3u` (python3) |
+| `/home/ofer/kiosk/watch-playlist.sh` | Playlist watcher → rebuild m3u + restart mpv on change |
+| `/home/ofer/kiosk/playlist.json` | Last-fetched playlist (synced from Pages by the watcher) |
 | `/home/ofer/kiosk/watch-deploy.sh` | GitHub API deploy watcher → Chromium reload |
-| `~/.config/labwc/autostart` | labwc startup: runs start.sh, watch-deploy.sh, youtube-player.sh |
+| `~/.config/labwc/autostart` | labwc startup: runs start.sh, watch-deploy.sh, watch-playlist.sh, youtube-player.sh |
 | `~/.config/labwc/rc.xml` | Window rule: pins mpv window at youtube-card position (28,28 / 1298×730) |
 | `/tmp/yt-player.log` | youtube-player.sh log |
 | `/tmp/mpv.log` | mpv stdout/stderr |
 | `/tmp/watch-deploy.log` | watch-deploy.sh log |
+| `/tmp/watch-playlist.log` | watch-playlist.sh log |
 | `/tmp/yt-playlist.m3u` | Generated mpv playlist (ytdl:// entries) |
 
 ---
@@ -170,7 +175,26 @@ mpv \
 - mpv v0.40.0: `--ytdl-path` was **removed**; use `--script-opts=ytdl_hook-ytdl_path=...`
 - Force h264 (`vcodec^=avc`) at 480p max — AV1/VP9 can't use bcm2835-codec
 - Hardware decode confirmed via `/dev/video10` — CPU ~20% at 480p vs ~52% at 720p
-- Playlist uses hardcoded video IDs (not dynamic fetch) — avoids yt-dlp hanging on mix playlists
+- Playlist is git-managed in `playlist.json` (see below); mpv reloops it forever via `--loop-playlist=inf`
+
+### Playlist management (`playlist.json`)
+
+The video playlist lives in **`playlist.json`** at the repo root, served by GitHub
+Pages. Edit it, push, and the Pi auto-reloads within ~1–2 min — no manual Pi steps.
+
+```json
+{ "videos": [ { "id": "nK5Jwi3Mpc0", "enabled": true }, ... ] }
+```
+
+- `id` accepts a **bare video ID** or a **full YouTube URL** (`watch?v=`, `youtu.be/`, `/embed/`, `/shorts/`).
+- `enabled: false` (or omitting `enabled` → still enabled) — omit `false` to skip a video without deleting it.
+- Videos play **top-to-bottom** in array order, then reloop.
+- **Never blanks the screen:** bad/empty JSON is rejected and the last-good playlist is kept.
+
+**Pipeline:** `playlist.json` → `build-playlist.sh` (JSON→`/tmp/yt-playlist.m3u`, python3) →
+`watch-playlist.sh` (polls Pages every 60s; on content change rebuilds + restarts mpv) →
+`youtube-player.sh` (fetch+build at boot with baked-in offline fallback; mpv loop).
+A web-only commit does **not** restart the video (playlist changes are detected separately).
 
 **labwc window rule** (`~/.config/labwc/rc.xml`) pins the mpv window:
 ```xml
@@ -233,12 +257,14 @@ mpv \
 
 ## Current Playlist (YouTube video IDs)
 
-```
-nK5Jwi3Mpc0  4xDzrJKXOOY  jfKfPfyJRdk  Na0w3Mz46GA
-5qap5aO4i9A  DWcJFNfaw9c  lTRiuFIWV54  XULUBg_ZcAU
-```
+The live playlist is **`playlist.json`** (repo root) — that file is the source of truth.
 
-To change: edit the `PLAYLIST_IDS` variable in `/home/ofer/kiosk/youtube-player.sh` and restart the script.
+**To change the playlist:** edit `playlist.json`, commit, and push. The Pi picks it up
+within ~1–2 min and reloops. Add `"enabled": false` to a video to skip it without deleting.
+See "Playlist management" under the mpv YouTube Player section.
+
+> The `PLAYLIST_IDS` list in `youtube-player.sh` is now only the **offline fallback**
+> used if the Pi can't fetch `playlist.json` at boot.
 
 ---
 

@@ -16,8 +16,11 @@ while true; do
   sleep 2
 done &
 
-# Auto-deploy watcher
+# Auto-deploy watcher (web UI)
 /home/ofer/kiosk/watch-deploy.sh >> /tmp/watch-deploy.log 2>&1 &
+
+# Playlist watcher — auto-reloads playlist.json + restarts video on change
+/home/ofer/kiosk/watch-playlist.sh >> /tmp/watch-playlist.log 2>&1 &
 
 # YouTube video overlay — delay 8s to let Chromium start first
 sleep 8 && /home/ofer/kiosk/youtube-player.sh >> /tmp/yt-player.log 2>&1 &
