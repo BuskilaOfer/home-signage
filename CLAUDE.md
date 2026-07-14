@@ -7,18 +7,53 @@
 ## Quick Start
 
 ```sh
-source .env   # loads RPI_HOST, RPI_USER, RPI_PASS, GITHUB_TOKEN
-
-# SSH to Pi
-sshpass -p "$RPI_PASS" ssh -o StrictHostKeyChecking=no $RPI_USER@$RPI_HOST
+# SSH to Pi — auto-discovers the current IP by MAC (see "Connecting" below).
+# Works even after the Pi's DHCP lease changes. This is the preferred way.
+rpi-setup/pi-ssh.sh                      # interactive shell
+rpi-setup/pi-ssh.sh 'uptime; pgrep -a mpv'   # run a remote command
+PI=$(PI_PRINT_IP=1 rpi-setup/pi-ssh.sh)  # just resolve the IP into $PI
 
 # Deploy web changes
 git add -p && git commit -m "..." && git push
 # Pages deploys in ~60s, Pi auto-reloads via watch-deploy.sh
 
-# Push a Pi script update
-sshpass -p "$RPI_PASS" scp rpi-setup/youtube-player.sh $RPI_USER@$RPI_HOST:/home/ofer/kiosk/youtube-player.sh
+# Push a Pi script update (resolve IP first, then scp)
+PI=$(PI_PRINT_IP=1 rpi-setup/pi-ssh.sh)
+source .env
+sshpass -p "$RPI_PASS" scp rpi-setup/youtube-player.sh "$RPI_USER@$PI:/home/ofer/kiosk/youtube-player.sh"
 ```
+
+---
+
+## Connecting / Rediscovering the Pi
+
+**The Pi's IP is assigned by DHCP and CHANGES on reboot / lease renewal.**
+Do not trust `RPI_HOST` in `.env` — it is only a last-known-good hint. Always
+connect via `rpi-setup/pi-ssh.sh`, which finds the Pi by its (permanent) MAC.
+
+**How discovery works** (`rpi-setup/find-pi.sh`):
+1. Look up the MAC in the local ARP cache (fast path).
+2. If not present, ping-sweep `RPI_SUBNET` to populate ARP, then retry.
+3. Print the matching IPv4. eth0 (wired) is tried before wlan0 (WiFi).
+
+**The Pi has two NICs — both get their own IP and their own MAC:**
+
+| Interface | Role | MAC (stable) | `.env` var |
+|-----------|------|--------------|------------|
+| `eth0` (wired) | primary route | `b8:27:eb:2f:35:52` | `RPI_MAC_ETH` |
+| `wlan0` (WiFi) | backup route | `b8:27:eb:7a:60:07` | `RPI_MAC_WLAN` |
+
+Same physical Pi (`hostname: raspberrypi`), so both IPs SSH into the same box.
+
+**If discovery fails**, the Pi is probably powered off or on another subnet:
+```sh
+rpi-setup/find-pi.sh          # prints diagnostics to stderr
+arp -a -n | grep -i b8:27:eb  # any Raspberry Pi (OUI b8:27:eb / dc:a6:32) on the LAN?
+```
+
+**Permanent fix (recommended):** reserve a static DHCP lease for MAC
+`b8:27:eb:2f:35:52` on the router (`192.168.68.1`) so the wired IP never
+changes. Discovery keeps working either way.
 
 ---
 
@@ -220,6 +255,10 @@ To change: edit the `PLAYLIST_IDS` variable in `/home/ofer/kiosk/youtube-player.
 | yt-dlp mix playlist | `get_playlist()` on YouTube mix URLs hangs (unlimited entries); use hardcoded IDs |
 | CDP WebSocket | Requires `--remote-allow-origins=http://localhost:9222` — added to `rpi-setup/start.sh` (push to Pi to enable) |
 | Chromium singleton lock | After crash, delete `/home/ofer/kiosk/profile/Default/SingletonLock` before restart |
+| Pi IP changes on reboot | `RPI_HOST` in `.env` is DHCP-assigned and goes stale. Never hardcode it — use `rpi-setup/pi-ssh.sh` (finds the Pi by MAC). See "Connecting / Rediscovering the Pi". |
+| macOS `arp` strips MAC zeros | Prints `b8:27:eb:7a:60:7`, not `...60:07`. `find-pi.sh` normalizes both sides — don't string-compare raw MACs. |
+| macOS default bash is 3.2 | No `${var,,}` / `${var^^}` / associative arrays in helper scripts. `find-pi.sh` lowercases via `tr`. Keep helpers bash-3.2 safe. |
+| `nc` blocked in this env | Port scans via `nc` are denied by user rules. Probe reachability with `ping` or by attempting the actual SSH instead. |
 
 ---
 
