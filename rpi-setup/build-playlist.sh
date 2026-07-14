@@ -62,16 +62,21 @@ if not isinstance(videos, list):
 
 out = []
 for entry in videos:
-    if not isinstance(entry, dict):
+    # An entry may be a bare ID/URL string, or an object {id, enabled}.
+    if isinstance(entry, str):
+        raw = entry
+    elif isinstance(entry, dict):
+        # Omitted 'enabled' => enabled. Explicit false => skip.
+        if entry.get("enabled", True) is False:
+            continue
+        raw = entry.get("id")
+    else:
         continue
-    # Omitted 'enabled' => enabled. Explicit false => skip.
-    if entry.get("enabled", True) is False:
-        continue
-    vid = extract_id(entry.get("id"))
+    vid = extract_id(raw)
     if vid:
         out.append("ytdl://" + vid)
     else:
-        sys.stderr.write("build-playlist: skipping unrecognized id: %r\n" % entry.get("id"))
+        sys.stderr.write("build-playlist: skipping unrecognized id: %r\n" % raw)
 
 if not out:
     sys.stderr.write("build-playlist: no enabled/valid videos — refusing to write empty playlist\n")
