@@ -11,6 +11,17 @@
 YTDLP="/usr/local/bin/yt-dlp"
 GEOMETRY="1298x730+28+28"
 
+# Audio: route straight to the HDMI output via ALSA, addressed by CARD *name*
+# (reboot-stable — unlike numeric card indexes, which can reorder).
+# WHY not the default (PipeWire) sink: WirePlumber won't spawn an HDMI sink on
+# this board (the vc4 connector reports empty EDID at boot, so its only live
+# sink is the analog 3.5mm jack — which is unplugged, hence "no sound"). The
+# HDMI PCM works fine when opened directly, so we bypass PipeWire for audio.
+# `plughw` does any needed format conversion (raw hw: rejects S16/S32 here).
+# If you ever want sound on the 3.5mm jack instead, use:
+#   AUDIO_DEVICE="alsa/plughw:CARD=Headphones,DEV=0"
+AUDIO_DEVICE="alsa/plughw:CARD=vc4hdmi,DEV=0"
+
 KIOSK_DIR="/home/ofer/kiosk"
 PLAYLIST_URL="https://buskilaofer.github.io/home-signage/playlist.json"
 LOCAL_JSON="$KIOSK_DIR/playlist.json"
@@ -74,7 +85,8 @@ while true; do
     --wayland-configure-bounds=no \
     --ontop --ontop-level=system \
     --geometry="$GEOMETRY" \
-    --volume=70 \
+    --ao=alsa --audio-device="$AUDIO_DEVICE" \
+    --volume=100 \
     --loop-playlist=inf \
     --ytdl-format="$YTDL_FORMAT" \
     --script-opts=ytdl_hook-ytdl_path="$YTDLP" \

@@ -166,6 +166,8 @@ mpv \
   --wayland-app-id=kiosk-youtube \    # used by labwc window rule
   --ontop --ontop-level=system \
   --geometry=1298x730+28+28 \         # matches .youtube-card in CSS
+  --ao=alsa --audio-device=alsa/plughw:CARD=vc4hdmi,DEV=0 \  # HDMI audio (see below)
+  --volume=100 \
   --ytdl-format="bestvideo[vcodec^=avc][height<=480]+bestaudio/best[height<=480]" \
   --script-opts=ytdl_hook-ytdl_path=/usr/local/bin/yt-dlp \
   /tmp/yt-playlist.m3u
@@ -176,6 +178,25 @@ mpv \
 - Force h264 (`vcodec^=avc`) at 480p max — AV1/VP9 can't use bcm2835-codec
 - Hardware decode confirmed via `/dev/video10` — CPU ~20% at 480p vs ~52% at 720p
 - Playlist is git-managed in `playlist.json` (see below); mpv reloops it forever via `--loop-playlist=inf`
+
+### Audio — routed straight to HDMI via ALSA (bypasses PipeWire)
+
+The kiosk plays sound out the **HDMI display** (LG TV). mpv is pinned to the HDMI
+ALSA device **by card name**: `--ao=alsa --audio-device=alsa/plughw:CARD=vc4hdmi,DEV=0`.
+
+**Why bypass the PipeWire default sink:** On this board WirePlumber does **not**
+spawn an HDMI sink at boot (the vc4 HDMI connector's `edid` sysfs node reads empty,
+even though the kernel ELD is fine), so PipeWire's only live sink is the analog
+**3.5mm jack** — which is unplugged. Result: mpv played audio to a dead jack =
+"no sound". Addressing the HDMI PCM directly via ALSA sidesteps the flaky sink.
+
+- Use the **card name** (`CARD=vc4hdmi`), not a numeric index — indexes can reorder across boots.
+- `plughw` (not raw `hw`) is required: the vc4-hdmi PCM rejects S16/S32 directly; `plughw` converts (it clocks out as `IEC958_SUBFRAME_LE`, 48 kHz stereo).
+- To move audio to the **3.5mm jack** instead, set `AUDIO_DEVICE="alsa/plughw:CARD=Headphones,DEV=0"` in `youtube-player.sh`.
+- **Verify audio is really flowing** (mpv bypasses PipeWire, so `wpctl` won't show it):
+  ```sh
+  cat /proc/asound/card0/pcm0p/sub0/status   # state: RUNNING + advancing hw_ptr = audio live
+  ```
 
 ### Playlist management (`playlist.json`)
 
@@ -276,6 +297,8 @@ See "Playlist management" under the mpv YouTube Player section.
 | `background-image` on fixed div | Can fail in software render; put it on `html, body` instead |
 | mpv `--ytdl-path` removed | Use `--script-opts=ytdl_hook-ytdl_path=/path/to/yt-dlp` |
 | mpv Wayland position | `--geometry` hint is ignored; position via labwc `rc.xml` window rule |
+| No HDMI audio via PipeWire | WirePlumber spawns no HDMI sink at boot (empty `edid` sysfs on vc4); default sink is the unplugged 3.5mm jack → silence. mpv is pinned to `--audio-device=alsa/plughw:CARD=vc4hdmi,DEV=0`. Use `plughw` + card **name**. Verify via `/proc/asound/card0/pcm0p/sub0/status`. |
+| Killing mpv drops SSH | `pkill mpv` briefly spikes Pi load and can drop the SSH session mid-command. Launch the player detached (`setsid nohup … & disown`) and re-check state after; don't assume a dropped command finished. |
 | SIGUSR1 to labwc | Sends reconfigure signal but **kills the kiosk session** on this build — don't use it |
 | GitHub Pages cache | CDN can take 2–5 min to serve new content after commit |
 | yt-dlp mix playlist | `get_playlist()` on YouTube mix URLs hangs (unlimited entries); use hardcoded IDs |
