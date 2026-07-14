@@ -1,13 +1,11 @@
 {
-  "_comment": "YouTube playlist for the kiosk video overlay. Edit + push; the Pi auto-reloads within ~1-2 min and reloops forever. Each entry is a YouTube video ID (or full URL). Videos play top-to-bottom in the order listed. To disable a video without deleting it, replace its string with an object: { \"id\": \"VIDEO_ID\", \"enabled\": false }",
   "videos": [
-    "nK5Jwi3Mpc0",
-    "4xDzrJKXOOY",
-    "jfKfPfyJRdk",
-    "Na0w3Mz46GA",
-    "5qap5aO4i9A",
-    "DWcJFNfaw9c",
-    "lTRiuFIWV54",
-    "XULUBg_ZcAU"
+    { "id": "nK5Jwi3Mpc0", "enabled": true },
+    { "id": "cydKfoBrPV0", "enabled": true },
+    { "id": "PJxxfilLnGI", "enabled": true },
+    { "id": "2U39GwaekJw", "enabled": true },
+    { "id": "iQ-TVzCQoYc", "enabled": true },
+    { "id": "jMcjqGIuBBA", "enabled": true },
+    { "id": "JS6uhdQJo4A", "enabled": true }
   ]
 }
